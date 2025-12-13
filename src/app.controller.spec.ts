@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { ApiKeyGuard } from './cross-cutting/auth/guards/apiKey';
 
 describe('AppController', () => {
   let app: TestingModule;
@@ -9,7 +10,10 @@ describe('AppController', () => {
     app = await Test.createTestingModule({
       controllers: [AppController],
       providers: [AppService],
-    }).compile();
+    })
+      .overrideGuard(ApiKeyGuard)
+      .useValue({ canActivate: () => true })
+      .compile();
   });
 
   describe('getHello', () => {
