@@ -4,6 +4,8 @@ import { AppService } from './app.service';
 import { LoggerMiddleware } from './middleware/logger.middleware';
 import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from './cross-cutting/db/prisma.module';
+import helmet from 'helmet';
+import { AuthModule } from './cross-cutting/auth/auth.module';
 
 @Module({
   imports: [
@@ -12,12 +14,13 @@ import { PrismaModule } from './cross-cutting/db/prisma.module';
       isGlobal: true,
     }),
     PrismaModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(LoggerMiddleware).forRoutes('*');
+    consumer.apply(LoggerMiddleware, helmet()).forRoutes('*');
   }
 }
