@@ -1,98 +1,326 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Media Service
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A NestJS-based media management service with PostgreSQL database and Prisma ORM. This service handles media files (images, videos, audio, documents) with organization-based access control and API credential management.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## 📋 Table of Contents
 
-## Description
+- [Prerequisites](#prerequisites)
+- [Tech Stack](#tech-stack)
+- [Getting Started](#getting-started)
+- [Database Management](#database-management)
+- [Development](#development)
+- [Testing](#testing)
+- [Project Structure](#project-structure)
+- [Available Scripts](#available-scripts)
+- [Environment Variables](#environment-variables)
+- [Database Schema](#database-schema)
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## ✅ Prerequisites
 
-## Project setup
+Before you begin, ensure you have the following installed:
 
-```bash
-$ npm install
-```
+- **Node.js** >= 20.0.0
+- **npm** >= 10.0.0
+- **Docker** and **Docker Compose** (for local database)
 
-## Compile and run the project
+## 🛠 Tech Stack
 
-```bash
-# development
-$ npm run start
+- **Framework**: NestJS 11.x
+- **Language**: TypeScript 5.x
+- **Database**: PostgreSQL (via Docker)
+- **ORM**: Prisma 7.x
+- **Testing**: Jest
+- **Code Quality**: ESLint, Prettier, Husky
+- **Runtime**: SWC for fast compilation
 
-# watch mode
-$ npm run start:dev
+## 🚀 Getting Started
 
-# production mode
-$ npm run start:prod
-```
-
-## Run tests
+### 1. Clone the Repository
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+git clone <repository-url>
+cd media-service
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### 2. Install Dependencies
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+npm install
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### 3. Setup Environment Variables
 
-## Resources
+Copy the example environment file and configure it:
 
-Check out a few resources that may come in handy when working with NestJS:
+```bash
+cp .env.example .env
+```
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+Edit `.env` with your preferred settings (default values work out of the box):
 
-## Support
+```env
+# Database Configuration
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+POSTGRES_DB=media_service
+POSTGRES_PORT=5432
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+# Prisma Database URL
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/media_service?schema=public"
 
-## Stay in touch
+# Application Configuration
+NODE_ENV=development
+PORT=3000
+```
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+### 4. Setup Database & Run Migrations
 
-## License
+This single command will:
+- Start PostgreSQL container
+- Wait for database to be ready
+- Run Prisma migrations
+- Generate Prisma client
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+```bash
+npm run db:setup
+```
+
+### 5. Start Development Server
+
+```bash
+npm run start:dev
+```
+
+The API will be available at `http://localhost:3000`
+
+## 🗄 Database Management
+
+### Docker Commands
+
+```bash
+# Start PostgreSQL container
+npm run db:up
+
+# Stop PostgreSQL container
+npm run db:down
+
+# Restart PostgreSQL container
+npm run db:restart
+
+# View PostgreSQL logs
+npm run db:logs
+
+# Wait for database to be ready
+npm run db:wait
+```
+
+### Prisma Commands
+
+```bash
+# Generate Prisma Client
+npm run prisma:generate
+
+# Create a new migration
+npm run prisma:migrate
+
+# Deploy migrations to production
+npm run prisma:migrate:deploy
+
+# Reset database (⚠️ WARNING: Deletes all data)
+npm run prisma:reset
+
+# Check migration status
+npm run prisma:migrate:status
+
+# Open Prisma Studio (Database GUI)
+npm run prisma:studio
+
+# Seed the database
+npm run prisma:seed
+
+# Push schema changes without migrations
+npm run prisma:push
+
+# Pull schema from database
+npm run prisma:pull
+
+# Validate schema
+npm run prisma:validate
+
+# Format schema file
+npm run prisma:format
+```
+
+## 💻 Development
+
+### Running the Application
+
+```bash
+# Development mode with watch
+npm run start:dev
+
+# Production mode
+npm run build
+npm run start:prod
+
+# Debug mode
+npm run start:debug
+```
+
+### Code Quality
+
+```bash
+# Lint code
+npm run lint
+
+# Format code
+npm run format
+```
+
+## 🧪 Testing
+
+```bash
+# Run unit tests
+npm run test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run tests with coverage
+npm run test:cov
+
+# Run e2e tests
+npm run test:e2e
+
+# Debug tests
+npm run test:debug
+```
+
+## 📁 Project Structure
+
+```
+media-service/
+├── prisma/
+│   ├── schema.prisma          # Database schema
+│   └── migrations/            # Database migrations
+├── scripts/
+│   └── wait-for-db.js         # Database readiness checker
+├── src/
+│   ├── app.module.ts          # Root module
+│   ├── app.controller.ts      # Root controller
+│   ├── app.service.ts         # Root service
+│   └── main.ts                # Application entry point
+├── test/
+│   ├── app.e2e-spec.ts        # E2E tests
+│   └── jest-e2e.json          # E2E test configuration
+├── compose.yaml               # Docker Compose configuration
+├── .env                       # Environment variables (not in git)
+├── .env.example               # Environment variables template
+└── package.json               # Project dependencies & scripts
+```
+
+## 📜 Available Scripts
+
+### Application
+
+| Script | Description |
+|--------|-------------|
+| `npm run build` | Build the application |
+| `npm run start` | Start the application |
+| `npm run start:dev` | Start in development mode with watch |
+| `npm run start:debug` | Start in debug mode |
+| `npm run start:prod` | Start in production mode |
+
+### Database
+
+| Script | Description |
+|--------|-------------|
+| `npm run db:setup` | Complete database setup (recommended for first-time setup) |
+| `npm run db:up` | Start PostgreSQL container |
+| `npm run db:down` | Stop PostgreSQL container |
+| `npm run db:restart` | Restart PostgreSQL container |
+| `npm run db:logs` | View PostgreSQL logs |
+| `npm run db:reset` | Reset database and migrations |
+
+### Prisma
+
+| Script | Description |
+|--------|-------------|
+| `npm run prisma:generate` | Generate Prisma Client |
+| `npm run prisma:migrate` | Create and apply migration |
+| `npm run prisma:migrate:deploy` | Deploy migrations (production) |
+| `npm run prisma:migrate:status` | Check migration status |
+| `npm run prisma:studio` | Open Prisma Studio GUI |
+| `npm run prisma:seed` | Seed database with sample data |
+| `npm run prisma:format` | Format Prisma schema |
+
+### Testing & Quality
+
+| Script | Description |
+|--------|-------------|
+| `npm run test` | Run unit tests |
+| `npm run test:watch` | Run tests in watch mode |
+| `npm run test:cov` | Run tests with coverage |
+| `npm run test:e2e` | Run end-to-end tests |
+| `npm run lint` | Lint and fix code |
+| `npm run format` | Format code with Prettier |
+
+## 🔐 Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `POSTGRES_USER` | PostgreSQL username | `postgres` |
+| `POSTGRES_PASSWORD` | PostgreSQL password | `postgres` |
+| `POSTGRES_DB` | PostgreSQL database name | `media_service` |
+| `POSTGRES_PORT` | PostgreSQL port | `5432` |
+| `DATABASE_URL` | Full database connection string | Constructed from above |
+| `NODE_ENV` | Application environment | `development` |
+| `PORT` | Application port | `3000` |
+
+## 🗃 Database Schema
+
+### Models
+
+#### Media
+Stores media file information (images, videos, audio, documents)
+
+- `id` - Unique identifier (BigInt)
+- `uuid` - UUID for external references
+- `fileName` - Original file name
+- `fileKey` - Storage key/path
+- `size` - File size in bytes
+- `type` - Media type (IMAGE, VIDEO, AUDIO, DOCUMENT)
+- `mimeType` - File MIME type
+- `status` - Media status (PENDING, ACTIVE, INFECTED, DELETED)
+- `organizationId` - Reference to organization
+- `createdAt`, `updatedAt` - Timestamps
+
+#### Organization
+Represents organizations that own media
+
+- `id` - Unique identifier (BigInt)
+- `uuid` - UUID for external references
+- `name` - Organization name
+- `createdAt`, `updatedAt` - Timestamps
+
+#### Credential
+API credentials for organization access
+
+- `id` - Unique identifier (BigInt)
+- `apiKey` - Unique API key
+- `apiSecret` - Encrypted API secret
+- `isActive` - Active status
+- `expiresAt` - Optional expiration date
+- `organizationId` - Reference to organization
+- `createdAt`, `updatedAt` - Timestamps
+
+## 📚 Additional Resources
+
+- [NestJS Documentation](https://docs.nestjs.com)
+- [Prisma Documentation](https://www.prisma.io/docs)
+- [PostgreSQL Documentation](https://www.postgresql.org/docs)
+- [Docker Documentation](https://docs.docker.com)
+
+## 📄 License
+
+This project is [MIT licensed](LICENSE).
