@@ -2,13 +2,14 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { version } from '../package.json';
+import { setup } from './setup';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   const config = new DocumentBuilder()
     .setTitle('Media Service API')
-    .setDescription('API documentation for the Media Service')
+    .setDescription('API documentation for the Media Service.')
     .setVersion(version)
     .build();
 
@@ -16,7 +17,7 @@ async function bootstrap() {
   SwaggerModule.setup('swagger', app, document, {
     jsonDocumentUrl: 'swagger/json',
   });
-
+  await setup();
   await app.listen(process.env.PORT ?? 3000);
 }
 void bootstrap();
