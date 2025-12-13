@@ -1,4 +1,4 @@
-import { applyDecorators, SetMetadata, UseGuards } from '@nestjs/common';
+import { applyDecorators, UseGuards } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiSecurity,
@@ -15,7 +15,6 @@ export enum AuthType {
 
 export function JeffAuth(authType: AuthType = AuthType.JWT) {
   const decorators = [
-    SetMetadata('AUTH_TYPE', authType),
     ApiUnauthorizedResponse({ description: 'Unauthorized' }),
     ApiForbiddenResponse({ description: 'Forbidden' }),
   ];
