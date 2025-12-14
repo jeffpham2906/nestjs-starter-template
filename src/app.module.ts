@@ -6,6 +6,7 @@ import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from './cross-cutting/db/prisma.module';
 import helmet from 'helmet';
 import { AuthModule } from './cross-cutting/auth/auth.module';
+import { HealthModule } from './cross-cutting/health/health.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { AuthModule } from './cross-cutting/auth/auth.module';
     }),
     PrismaModule,
     AuthModule,
+    HealthModule,
   ],
   controllers: [AppController],
   providers: [AppService],

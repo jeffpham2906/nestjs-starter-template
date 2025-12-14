@@ -8,9 +8,8 @@ import { PrismaPg } from '@prisma/adapter-pg';
     {
       provide: PrismaService,
       useFactory: (configService: ConfigService) => {
-        const adapter = new PrismaPg({
-          url: configService.get<string>('DATABASE_URL'),
-        });
+        const connectionString = configService.get<string>('DATABASE_URL');
+        const adapter = new PrismaPg({ connectionString });
         const prismaService = new PrismaService({ adapter });
         return prismaService;
       },
