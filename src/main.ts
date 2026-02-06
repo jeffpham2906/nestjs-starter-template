@@ -1,12 +1,12 @@
 import { NestFactory } from '@nestjs/core';
+import { INestApplication, Logger } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { version } from '../package.json';
 import { LoggingInterceptor } from './cross-cutting/logging/interceptor';
-import { Logger } from '@nestjs/common';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app: INestApplication<AppModule> = await NestFactory.create(AppModule);
   const logger = new Logger('Bootstrap');
 
   app.useGlobalInterceptors(new LoggingInterceptor());
