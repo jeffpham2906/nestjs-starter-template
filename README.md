@@ -1,6 +1,6 @@
-# Media Service
+# NestJS Starter Template
 
-A NestJS-based media management service with PostgreSQL database and Prisma ORM. This service handles media files (images, videos, audio, documents) with organization-based access control and API credential management.
+A feature-rich NestJS starter template with PostgreSQL database and Prisma ORM. This template provides a solid foundation for building scalable backend applications with best practices and development tools already configured.
 
 ## 📋 Table of Contents
 
@@ -39,7 +39,7 @@ Before you begin, ensure you have the following installed:
 
 ```bash
 git clone <repository-url>
-cd media-service
+cd <your-project-name>
 ```
 
 ### 2. Install Dependencies
@@ -62,11 +62,11 @@ Edit `.env` with your preferred settings (default values work out of the box):
 # Database Configuration
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=postgres
-POSTGRES_DB=media_service
+POSTGRES_DB=your_database_name
 POSTGRES_PORT=5432
 
 # Prisma Database URL
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/media_service?schema=public"
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/your_database_name?schema=public"
 
 # Application Configuration
 NODE_ENV=development
@@ -199,7 +199,7 @@ npm run test:debug
 ## 📁 Project Structure
 
 ```
-media-service/
+nestjs-starter/
 ├── prisma/
 │   ├── schema.prisma          # Database schema
 │   └── migrations/            # Database migrations
@@ -271,7 +271,7 @@ media-service/
 |----------|-------------|---------|
 | `POSTGRES_USER` | PostgreSQL username | `postgres` |
 | `POSTGRES_PASSWORD` | PostgreSQL password | `postgres` |
-| `POSTGRES_DB` | PostgreSQL database name | `media_service` |
+| `POSTGRES_DB` | PostgreSQL database name | `your_database_name` |
 | `POSTGRES_PORT` | PostgreSQL port | `5432` |
 | `DATABASE_URL` | Full database connection string | Constructed from above |
 | `NODE_ENV` | Application environment | `development` |
@@ -279,40 +279,41 @@ media-service/
 
 ## 🗃 Database Schema
 
-### Models
+This template uses Prisma ORM with PostgreSQL. The database schema is defined in `prisma/schema.prisma` and can be customized to fit your application's needs.
 
-#### Media
-Stores media file information (images, videos, audio, documents)
+### Getting Started with Schema
 
-- `id` - Unique identifier (BigInt)
-- `uuid` - UUID for external references
-- `fileName` - Original file name
-- `fileKey` - Storage key/path
-- `size` - File size in bytes
-- `type` - Media type (IMAGE, VIDEO, AUDIO, DOCUMENT)
-- `mimeType` - File MIME type
-- `status` - Media status (PENDING, ACTIVE, INFECTED, DELETED)
-- `organizationId` - Reference to organization
-- `createdAt`, `updatedAt` - Timestamps
+1. **Define your models** in `prisma/schema.prisma`
+2. **Generate Prisma Client** after schema changes:
+   ```bash
+   npm run prisma:generate
+   ```
+3. **Create and run migrations**:
+   ```bash
+   npm run prisma:migrate
+   ```
 
-#### Organization
-Represents organizations that own media
+### Example Model
 
-- `id` - Unique identifier (BigInt)
-- `uuid` - UUID for external references
-- `name` - Organization name
-- `createdAt`, `updatedAt` - Timestamps
+To add a new model, update the schema file:
 
-#### Credential
-API credentials for organization access
+```prisma
+model User {
+  id        BigInt   @id @default(autoincrement())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+```
 
-- `id` - Unique identifier (BigInt)
-- `apiKey` - Unique API key
-- `apiSecret` - Encrypted API secret
-- `isActive` - Active status
-- `expiresAt` - Optional expiration date
-- `organizationId` - Reference to organization
-- `createdAt`, `updatedAt` - Timestamps
+### Prisma Studio
+
+Use Prisma Studio to interact with your database visually:
+
+```bash
+npm run prisma:studio
+```
 
 ## 📚 Additional Resources
 

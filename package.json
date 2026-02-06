@@ -1,5 +1,5 @@
 {
-  "name": "media-service",
+  "name": "nestjs-starter-template",
   "private": true,
   "version": "1.0.0",
   "description": "Nest TypeScript starter repository",
