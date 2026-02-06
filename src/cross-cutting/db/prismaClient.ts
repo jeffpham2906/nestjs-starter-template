@@ -1,7 +1,10 @@
-import { Logger, OnModuleInit } from '@nestjs/common';
+import { Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { Prisma, PrismaClient } from 'generated/prisma/client';
 
-export class PrismaService extends PrismaClient implements OnModuleInit {
+export class PrismaService
+  extends PrismaClient
+  implements OnModuleInit, OnModuleDestroy
+{
   private readonly logger: Logger;
   constructor(options: Prisma.PrismaClientOptions) {
     super(options);
@@ -15,5 +18,8 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
       this.logger.error('Failed to connect to the database.', error);
       throw error;
     }
+  }
+  async onModuleDestroy() {
+    await this.$disconnect();
   }
 }
