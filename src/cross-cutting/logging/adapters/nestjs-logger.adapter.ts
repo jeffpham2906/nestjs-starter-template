@@ -48,6 +48,11 @@ export class NestJSLoggerAdapter implements ILogger {
       ...rest,
       ...options,
     };
+    const isProd = process.env.NODE_ENV === 'production';
+    if (isProd) {
+      // In production, minimize whitespace
+      return JSON.stringify(loggedObject);
+    }
     return JSON.stringify(loggedObject, null, 2);
   }
 }
