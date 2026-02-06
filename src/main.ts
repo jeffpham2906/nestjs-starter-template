@@ -12,8 +12,8 @@ async function bootstrap() {
   app.useGlobalInterceptors(new LoggingInterceptor());
 
   const config = new DocumentBuilder()
-    .setTitle('Media Service API')
-    .setDescription('API documentation for the Media Service.')
+    .setTitle('<Project Name> API')
+    .setDescription('API documentation for the <Project Name>.')
     .setVersion(version)
     .addApiKey(
       {
