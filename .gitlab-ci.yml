@@ -1,0 +1,46 @@
+
+include:
+  - project: "jeffpham2906/dev-ops"
+    ref: "v1.0.1"
+    file: "build-and-push.yml"
+  - project: "jeffpham2906/dev-ops"
+    ref: "main"
+    file: "deploy_docker_ssh.yml"
+stages:
+  - build
+  - deploy
+
+build-image:
+  stage: build
+  extends: .build-and-push
+  rules:
+    # production release
+    - if: $CI_COMMIT_TAG
+
+    # development build
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+deploy-to-dev:
+  stage: deploy
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  environment:
+    name: development
+  extends: .deploy_docker_ssh
+  variables:
+    IMAGE: "$CI_REGISTRY_IMAGE:dev"
+    # APP_NAME: "Project Name" # Optional, defaults to repo name
+    PORT: "3000"
+
+deploy-to-prod:
+  stage: deploy
+  rules:
+    - if: $CI_COMMIT_TAG
+  when: manual
+  environment:
+    name: production
+  extends: .deploy_docker_ssh
+  variables:
+    IMAGE: "$CI_REGISTRY_IMAGE:$CI_COMMIT_TAG"
+    # APP_NAME: "Project Name" # Optional, defaults to repo name
+    PORT: "3000"
