@@ -1,15 +1,20 @@
 import { NestFactory } from '@nestjs/core';
-import { INestApplication, Logger } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { version } from '../package.json';
-import { LoggingInterceptor } from './cross-cutting/logging/interceptor';
+import { Logger } from 'nestjs-pino';
+import { HttpLoggingInterceptor } from './http.interceptor';
 
 async function bootstrap() {
-  const app: INestApplication<AppModule> = await NestFactory.create(AppModule);
-  const logger = new Logger('Bootstrap');
+  const app: INestApplication<AppModule> = await NestFactory.create(AppModule, {
+    bufferLogs: true,
+  });
+  app.useLogger(app.get(Logger));
+  app.flushLogs();
+  const logger = app.get(Logger);
 
-  app.useGlobalInterceptors(new LoggingInterceptor());
+  app.useGlobalInterceptors(new HttpLoggingInterceptor());
 
   const config = new DocumentBuilder()
     .setTitle('<Project Name> API')

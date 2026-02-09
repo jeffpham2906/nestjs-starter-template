@@ -1,13 +1,13 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { ContextMiddleware } from './middleware/context';
 import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from './cross-cutting/db/prisma.module';
 import helmet from 'helmet';
 import { AuthModule } from './cross-cutting/auth/auth.module';
 import { HealthModule } from './cross-cutting/health/health.module';
-import { LoggingModule } from './cross-cutting/logging/logging.module';
+import { LoggerModule } from 'nestjs-pino';
+import { randomUUID } from 'crypto';
 
 @Module({
   imports: [
@@ -15,7 +15,25 @@ import { LoggingModule } from './cross-cutting/logging/logging.module';
       envFilePath: '.env',
       isGlobal: true,
     }),
-    LoggingModule,
+    LoggerModule.forRoot({
+      pinoHttp: {
+        autoLogging: false,
+        genReqId: (req) => {
+          const requestId =
+            req.headers['x-request-id'] ||
+            req.headers['x-correlation-id'] ||
+            randomUUID();
+          req.headers['x-request-id'] = requestId;
+          return requestId;
+        },
+        quietReqLogger: true,
+        quietResLogger: true,
+        transport:
+          process.env.NODE_ENV === 'development'
+            ? { target: 'pino-pretty' }
+            : undefined,
+      },
+    }),
     PrismaModule,
     AuthModule,
     HealthModule,
@@ -25,6 +43,6 @@ import { LoggingModule } from './cross-cutting/logging/logging.module';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(ContextMiddleware, helmet()).forRoutes('*');
+    consumer.apply(helmet()).forRoutes('*');
   }
 }
