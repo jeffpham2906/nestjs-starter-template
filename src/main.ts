@@ -1,10 +1,11 @@
-import { NestFactory } from '@nestjs/core';
+import { HttpAdapterHost, NestFactory } from '@nestjs/core';
 import { INestApplication } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { version } from '../package.json';
 import { Logger } from 'nestjs-pino';
 import { HttpLoggingInterceptor } from './http.interceptor';
+import { HttpExceptionFilter } from './http-exception.filter';
 
 async function bootstrap() {
   const app: INestApplication<AppModule> = await NestFactory.create(AppModule, {
@@ -12,9 +13,12 @@ async function bootstrap() {
   });
   app.useLogger(app.get(Logger));
   app.flushLogs();
+
   const logger = app.get(Logger);
+  const httpAdapter = app.get(HttpAdapterHost);
 
   app.useGlobalInterceptors(new HttpLoggingInterceptor());
+  app.useGlobalFilters(new HttpExceptionFilter(httpAdapter));
 
   const config = new DocumentBuilder()
     .setTitle('<Project Name> API')
