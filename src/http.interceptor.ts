@@ -31,6 +31,8 @@ export class HttpLoggingInterceptor implements NestInterceptor {
     log.info(
       this.redactSensitiveData({
         type: 'request',
+        host: request.host,
+        origin: request.originalUrl,
         method: request.method,
         url: request.url,
         params: request.params,
@@ -44,6 +46,8 @@ export class HttpLoggingInterceptor implements NestInterceptor {
         log.info(
           this.redactSensitiveData({
             type: 'response',
+            host: request.host,
+            origin: request.originalUrl,
             method: request.method,
             url: request.url,
             statusCode: request.res.statusCode,

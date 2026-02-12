@@ -7,12 +7,13 @@ import {
 } from '@nestjs/common';
 import { HttpAdapterHost } from '@nestjs/core';
 import { Request } from 'express';
-import { isObject } from 'lodash';
+import { isObject, isString } from 'lodash';
 
 interface ErrorResponse {
   reqId?: string;
   statusCode: number;
-  path: string;
+  host: string;
+  origin: string;
   errorCode?: string;
   error: Record<string, any> | string;
   cause?: unknown;
@@ -41,15 +42,15 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
     const responseBody: ErrorResponse = {
       statusCode: httpStatus,
-      path: request.url,
+      host: request.host,
+      origin: request.originalUrl,
       errorCode:
         exception instanceof HttpException
           ? exception.name
           : 'InternalServerError',
-      error:
-        typeof errorResponse === 'string'
-          ? { message: errorResponse, name: 'Error' }
-          : errorResponse,
+      error: isString(errorResponse)
+        ? { message: errorResponse, name: 'Error' }
+        : errorResponse,
       cause: exception instanceof HttpException ? exception.cause : undefined,
     };
 
