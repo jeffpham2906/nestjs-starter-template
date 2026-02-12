@@ -7,6 +7,7 @@ import {
 } from '@nestjs/swagger';
 import { JWTGuard } from './guards/jwt';
 import { ApiKeyGuard } from './guards/apiKey';
+import { RoleGuard } from './guards/role';
 
 export enum AuthType {
   JWT = 'JWT',
@@ -20,10 +21,10 @@ export function JeffAuth(authType: AuthType = AuthType.JWT) {
   ];
 
   if (authType === AuthType.JWT) {
-    decorators.push(UseGuards(JWTGuard));
+    decorators.push(UseGuards(JWTGuard, RoleGuard));
     decorators.push(ApiBearerAuth());
   } else if (authType === AuthType.API_KEY) {
-    decorators.push(UseGuards(ApiKeyGuard));
+    decorators.push(UseGuards(ApiKeyGuard, RoleGuard));
     decorators.push(ApiSecurity('api-key'));
     decorators.push(ApiSecurity('timestamp'));
     decorators.push(ApiSecurity('signature'));

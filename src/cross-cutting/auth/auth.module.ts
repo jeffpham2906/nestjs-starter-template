@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
-import { AuthService } from './auth.service';
+import { AccessControlService } from './access-control.service';
 import { JWTGuard } from './guards/jwt';
 import { ApiKeyGuard } from './guards/apiKey';
 
 @Module({
-  providers: [AuthService, JWTGuard, ApiKeyGuard],
-  exports: [AuthService, JWTGuard, ApiKeyGuard],
+  providers: [AccessControlService, JWTGuard, ApiKeyGuard],
+  exports: [AccessControlService, JWTGuard, ApiKeyGuard],
 })
 export class AuthModule {}
