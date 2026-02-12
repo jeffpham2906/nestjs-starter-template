@@ -1,30 +1,19 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { PinoLogger } from 'nestjs-pino';
 
 @Injectable()
 export class AppService {
-  private readonly logger = new Logger(AppService.name);
-  constructor() {}
+  constructor(private readonly logger: PinoLogger) {
+    this.logger.setContext(AppService.name);
+  }
   getHello(): string {
-    // this.logger.log(
-    //   {
-    //     function: 'getHello',
-    //   },
-    //   'getHello',
-    // );
-    // throw new Error('Test error');
-    // throw new NotFoundException(
-    //   {
-    //     message: 'Resource not found',
-    //     details: {
-    //       resourceType: 'ExampleResource',
-    //       resourceId: '12345',
-    //     },
-    //   },
-    // {
-    //   cause: 'Underlying cause of the error, if any',
-    //   description: 'Detailed description of the error for debugging purposes',
-    // },
-    // );
+    this.logger.info(
+      {
+        function: 'getHello',
+      },
+      'getHello',
+    );
+
     return 'Hello World!';
   }
 }

@@ -4,16 +4,16 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { Request } from 'express';
+import { FastifyRequest } from 'fastify';
 
 @Injectable()
 export class JWTGuard implements CanActivate {
   canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest<Request>();
+    const request = context.switchToHttp().getRequest<FastifyRequest>();
 
     return this.validateRequest(request);
   }
-  private async validateRequest(request: Request): Promise<boolean> {
+  private async validateRequest(request: FastifyRequest): Promise<boolean> {
     console.log('JWT GUARD RUNNING');
 
     const [type, token] = (request.headers['authorization'] ?? '').split(' ');

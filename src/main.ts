@@ -1,23 +1,63 @@
 import { HttpAdapterHost, NestFactory } from '@nestjs/core';
-import { INestApplication } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { version } from '../package.json';
-import { Logger } from 'nestjs-pino';
-import { HttpLoggingInterceptor } from './http.interceptor';
 import { HttpExceptionFilter } from './http-exception.filter';
+import {
+  FastifyAdapter,
+  NestFastifyApplication,
+} from '@nestjs/platform-fastify';
+import { FastifyLoggerOptions, RawServerDefault } from 'fastify';
+import { PinoLoggerOptions } from 'fastify/types/logger';
+import { randomUUID } from 'crypto';
+
+const envToLogger: Record<
+  string,
+  (FastifyLoggerOptions<RawServerDefault> & PinoLoggerOptions) | boolean
+> = {
+  development: {
+    transport: {
+      target: 'pino-pretty',
+      options: {
+        translateTime: 'HH:MM:ss Z',
+        ignore: 'pid,hostname',
+      },
+    },
+  },
+  production: true,
+  test: false,
+};
+
+const generalLoggerOptions: FastifyLoggerOptions<RawServerDefault> &
+  PinoLoggerOptions = {
+  redact: [
+    'req.headers.authorization',
+    'req.headers.cookie',
+    'req.headers.set-cookie',
+  ],
+};
+
+const requestIdHeader = 'x-request-id';
 
 async function bootstrap() {
-  const app: INestApplication<AppModule> = await NestFactory.create(AppModule, {
-    bufferLogs: true,
-  });
-  app.useLogger(app.get(Logger));
+  const app = await NestFactory.create<NestFastifyApplication>(
+    AppModule,
+    new FastifyAdapter({
+      logger:
+        Object.assign(
+          envToLogger[process.env.NODE_ENV],
+          generalLoggerOptions,
+        ) ?? true,
+      requestIdHeader,
+      genReqId(req) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        return (req.headers[requestIdHeader] as string) || randomUUID();
+      },
+    }),
+  );
   app.flushLogs();
 
-  const logger = app.get(Logger);
   const httpAdapter = app.get(HttpAdapterHost);
-
-  app.useGlobalInterceptors(new HttpLoggingInterceptor());
   app.useGlobalFilters(new HttpExceptionFilter(httpAdapter));
 
   const config = new DocumentBuilder()
@@ -58,10 +98,5 @@ async function bootstrap() {
 
   const port = process.env.PORT || 3000;
   await app.listen(port);
-
-  logger.log(`Application is running on: http://localhost:${port}`);
-  logger.log(
-    `Swagger documentation available at: http://localhost:${port}/swagger`,
-  );
 }
 void bootstrap();

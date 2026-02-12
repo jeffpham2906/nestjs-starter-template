@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { ROLE_KEY } from 'src/decorators/roles.decorator';
 import { Role } from 'src/enums/role.enum';
 import { AccessControlService } from '../access-control.service';
-import { Request } from 'express';
+import { FastifyRequest } from 'fastify';
 
 export class TokenDto {
   id: string;
@@ -30,7 +30,7 @@ export class RoleGuard implements CanActivate {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest<Request>();
+    const request = context.switchToHttp().getRequest<FastifyRequest>();
     const token = request['token'] as TokenDto;
 
     for (const role of requiredRoles) {

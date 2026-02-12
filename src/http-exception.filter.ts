@@ -6,7 +6,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { HttpAdapterHost } from '@nestjs/core';
-import { Request } from 'express';
+import { FastifyRequest } from 'fastify';
 import { isObject, isString } from 'lodash';
 
 interface ErrorResponse {
@@ -29,12 +29,14 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const { httpAdapter } = this.httpAdapterHost;
 
     const ctx = host.switchToHttp();
-    const request = ctx.getRequest<Request>();
+    const request = ctx.getRequest<FastifyRequest>();
 
     const httpStatus =
       exception instanceof HttpException
         ? exception.getStatus()
         : HttpStatus.INTERNAL_SERVER_ERROR;
+    const isServerError = httpStatus >= 500 && httpStatus < 600;
+
     const errorResponse =
       exception instanceof HttpException
         ? exception.getResponse()
@@ -54,10 +56,11 @@ export class HttpExceptionFilter implements ExceptionFilter {
       cause: exception instanceof HttpException ? exception.cause : undefined,
     };
 
-    request.log.error(
-      Object.assign(exception, { responseBody }),
-      'Response error',
-    );
+    if (isServerError) {
+      request.log.error(exception, 'Server error');
+    } else {
+      request.log.warn(exception, 'Response error');
+    }
 
     httpAdapter.reply(
       ctx.getResponse(),

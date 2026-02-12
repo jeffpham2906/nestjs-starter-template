@@ -1,17 +1,17 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
-import { Request } from 'express';
 import { Observable } from 'rxjs';
+import { FastifyRequest } from 'fastify';
 
 @Injectable()
 export class ApiKeyGuard implements CanActivate {
   canActivate(
     context: ExecutionContext,
   ): boolean | Promise<boolean> | Observable<boolean> {
-    const request = context.switchToHttp().getRequest<Request>();
+    const request = context.switchToHttp().getRequest<FastifyRequest>();
     return this.validateApiKey(request);
   }
 
-  private async validateApiKey(request: Request): Promise<boolean> {
+  private async validateApiKey(request: FastifyRequest): Promise<boolean> {
     const apiKey = request.headers['x-api-key'];
     console.log('API_KEY RUNNING');
     return true;
