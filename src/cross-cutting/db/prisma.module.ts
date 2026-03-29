@@ -10,8 +10,7 @@ import { PrismaPg } from '@prisma/adapter-pg';
       useFactory: (configService: ConfigService) => {
         const connectionString = configService.get<string>('DATABASE_URL');
         const adapter = new PrismaPg({ connectionString });
-        const prismaService = new PrismaService({ adapter });
-        return prismaService;
+        return new PrismaService({ adapter });
       },
       inject: [ConfigService],
     },

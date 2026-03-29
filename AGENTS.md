@@ -295,8 +295,8 @@ The project includes a structured logging system in `src/cross-cutting/logging/`
 
 ```typescript
 import { Injectable } from '@nestjs/common';
-import { LoggerFactory } from '../cross-cutting/logging/logger.factory';
-import { ILogger } from '../cross-cutting/logging/interface/logger';
+import { LoggerFactory } from '../cross-cutting/logging/logging.factory';
+import { ILogger } from '../cross-cutting/logging/interface/logging';
 ```
 
 **Create a logger per service:**
@@ -307,7 +307,7 @@ export class YourService {
   private readonly logger: ILogger;
 
   constructor(loggerFactory: LoggerFactory) {
-    // Create logger with class name as context
+    // Create logging with class name as context
     this.logger = loggerFactory.createLoggerFromClass(YourService);
   }
 

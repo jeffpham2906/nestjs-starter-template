@@ -1,16 +1,17 @@
 import { Injectable } from '@nestjs/common';
-import { PinoLogger } from 'nestjs-pino';
+import { LoggerFactory } from '../logging/logger.factory';
+import { ILogger } from '../logging/port/logger.port';
 
 @Injectable()
 export class AccessControlService {
-  constructor(private readonly logger: PinoLogger) {
-    this.logger.setContext(AccessControlService.name);
+  private logger: ILogger;
+  constructor(private readonly loggerFactory: LoggerFactory) {
+    this.logger =
+      this.loggerFactory.createLoggerFromClass(AccessControlService);
   }
 
   hasPermission(userId: string, permission: string): boolean {
-    this.logger.info(
-      `Checking permission for user ${userId} and permission ${permission}`,
-    );
+    this.logger.log(`Access Control permission "${permission}"`);
     // Implement your permission logic here
     return false;
   }
