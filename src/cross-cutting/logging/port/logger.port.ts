@@ -39,3 +39,5 @@ export interface ILogger {
    */
   verbose(message: any, ...optionalParams: any[]): void;
 }
+
+export const ILogger = Symbol('ILogger');

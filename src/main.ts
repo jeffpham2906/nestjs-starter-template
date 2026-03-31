@@ -6,13 +6,14 @@ import {
   FastifyAdapter,
   NestFastifyApplication,
 } from '@nestjs/platform-fastify';
+import { ILogger } from './cross-cutting/logging/port/logger.port';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
     new FastifyAdapter(),
   );
-
+  const logger = app.get<ILogger>(ILogger);
   const config = new DocumentBuilder()
     .setTitle('<Project Name> API')
     .setDescription('API documentation for the <Project Name>.')
@@ -50,6 +51,8 @@ async function bootstrap() {
   });
 
   const port = process.env.PORT || 3000;
-  await app.listen(port);
+  await app.listen(port).then(() => {
+    logger.log(`Application is running on: http://localhost:${port}`);
+  });
 }
 void bootstrap();
