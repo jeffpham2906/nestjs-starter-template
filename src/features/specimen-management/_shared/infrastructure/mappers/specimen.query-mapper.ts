@@ -37,7 +37,7 @@ export class SpecimenQueryMapper implements ISpecimenQueryMapper {
         return err(new SpecimenMappingError(''));
       }
       return ok(parsedResult.data);
-    } catch (error) {
+    } catch (error: unknown) {
       return err(
         new SpecimenMappingError('Unexpected error during mapping', error),
       );

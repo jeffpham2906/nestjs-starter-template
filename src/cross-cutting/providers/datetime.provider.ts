@@ -8,6 +8,8 @@ export interface IDateTimeProvider {
   now(): Date;
 }
 
+export const IDateTimeProvider = Symbol('IDateTimeProvider');
+
 @Injectable({ scope: Scope.REQUEST })
 export class DateTimeProvider implements IDateTimeProvider {
   now(): Date {

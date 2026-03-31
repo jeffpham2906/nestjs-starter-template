@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { SpecimenQueryRepositoryPort } from '../ports/specimen.query-repository.port';
 import { err, ok, Result } from 'neverthrow';
 import { SpecimenResponseDto } from '../../dto/specimen.response.dto';
@@ -6,7 +6,7 @@ import {
   SpecimenQueryMapper,
   SpecimenReadData,
 } from '../mappers/specimen.query-mapper';
-import { LoggerFactory } from '../../../../../cross-cutting/logging/logger.factory';
+import { ILoggerFactory } from '../../../../../cross-cutting/logging/logger.factory';
 import { ILogger } from '../../../../../cross-cutting/logging/port/logger.port';
 
 @Injectable()
@@ -16,7 +16,8 @@ export class SpecimenQueryRepositoryPrisma
   private readonly logger: ILogger;
   constructor(
     private readonly mapper: SpecimenQueryMapper,
-    private readonly loggerFactory: LoggerFactory,
+    @Inject(ILoggerFactory)
+    private readonly loggerFactory: ILoggerFactory,
   ) {
     this.logger = loggerFactory.createLoggerFromClass(
       SpecimenQueryRepositoryPrisma,

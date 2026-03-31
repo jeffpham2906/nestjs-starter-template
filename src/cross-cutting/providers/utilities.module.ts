@@ -1,10 +1,19 @@
 import { Global, Module } from '@nestjs/common';
-import { UuidProvider } from './uuid.provider';
-import { DateTimeProvider } from './datetime.provider';
+import { IUuidProvider, UuidProvider } from './uuid.provider';
+import { DateTimeProvider, IDateTimeProvider } from './datetime.provider';
 
 @Global()
 @Module({
-  providers: [UuidProvider, DateTimeProvider],
-  exports: [UuidProvider, DateTimeProvider],
+  providers: [
+    {
+      provide: IUuidProvider,
+      useClass: UuidProvider,
+    },
+    {
+      provide: IDateTimeProvider,
+      useClass: DateTimeProvider,
+    },
+  ],
+  exports: [IUuidProvider, IDateTimeProvider],
 })
 export class UtilitiesModule {}

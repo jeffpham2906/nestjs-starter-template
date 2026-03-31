@@ -1,11 +1,15 @@
 import { Global, Module } from '@nestjs/common';
-import { LoggerFactory } from './logger.factory';
+import { ILoggerFactory, LoggerFactory } from './logger.factory';
 import { ILogger } from './port/logger.port';
 
 @Global()
 @Module({
   providers: [
     LoggerFactory,
+    {
+      provide: ILoggerFactory,
+      useClass: LoggerFactory,
+    },
     {
       provide: ILogger,
       useFactory: (loggerFactory: LoggerFactory) => {
@@ -14,6 +18,6 @@ import { ILogger } from './port/logger.port';
       inject: [LoggerFactory],
     },
   ],
-  exports: [LoggerFactory],
+  exports: [ILoggerFactory, ILogger],
 })
 export class LoggingModule {}

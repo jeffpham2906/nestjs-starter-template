@@ -1,14 +1,14 @@
 import { CreateSpecimenCommand, CreateSpecimenCommandSchema } from './command';
 import { err, ok, Result } from 'neverthrow';
 import { ValidationError } from '../../../shared/errors';
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { CreateSpecimenProps } from '../_shared/domain/types/specimen.types';
-import { UuidProvider } from '../../../cross-cutting/providers/uuid.provider';
+import { IUuidProvider } from '../../../cross-cutting/providers/uuid.provider';
 import { Specimen } from '../_shared/domain/entities/specimen';
 import { UserId } from '../../../shared/branded-types';
-import { SpecimenCommandRepositoryPrisma } from '../_shared/infrastructure/adapters/specimen.command-repository.prisma';
 import { ILogger } from '../../../cross-cutting/logging/port/logger.port';
-import { LoggerFactory } from '../../../cross-cutting/logging/logger.factory';
+import { ILoggerFactory } from '../../../cross-cutting/logging/logger.factory';
+import { ISpecimenCommandRepositoryPort } from '../_shared/infrastructure/ports/specimen.command-repository.port';
 
 export interface ICreateSpecimenUseCase {
   perform(
@@ -20,9 +20,12 @@ export interface ICreateSpecimenUseCase {
 export class CreateSpecimenUseCase implements ICreateSpecimenUseCase {
   private readonly logger: ILogger;
   constructor(
-    private readonly uuidProvider: UuidProvider,
-    private readonly repository: SpecimenCommandRepositoryPrisma,
-    private readonly loggerFactory: LoggerFactory,
+    @Inject(IUuidProvider)
+    private readonly uuidProvider: IUuidProvider,
+    @Inject(ISpecimenCommandRepositoryPort)
+    private readonly repository: ISpecimenCommandRepositoryPort,
+    @Inject(ILoggerFactory)
+    private readonly loggerFactory: ILoggerFactory,
   ) {
     this.logger = loggerFactory.createLoggerFromClass(CreateSpecimenUseCase);
   }

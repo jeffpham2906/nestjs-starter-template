@@ -4,17 +4,23 @@ import {
   ExceptionFilter,
   HttpException,
   HttpStatus,
+  Inject,
 } from '@nestjs/common';
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { isString } from 'lodash';
-import { LoggerFactory } from '../../logging/logger.factory';
+import { ILoggerFactory } from '../../logging/logger.factory';
 import { ILogger } from '../../logging/port/logger.port';
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
   private logger: ILogger;
-  constructor(private readonly loggerFactory: LoggerFactory) {
-    this.logger = loggerFactory.createLoggerFromClass(GlobalExceptionFilter);
+  constructor(
+    @Inject(ILoggerFactory)
+    private readonly loggerFactory: ILoggerFactory,
+  ) {
+    this.logger = this.loggerFactory.createLoggerFromClass(
+      GlobalExceptionFilter,
+    );
   }
 
   catch(exception: Error, host: ArgumentsHost) {

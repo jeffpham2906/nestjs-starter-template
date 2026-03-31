@@ -3,10 +3,11 @@ import {
   Body,
   Controller,
   HttpStatus,
+  Inject,
   InternalServerErrorException,
   Post,
 } from '@nestjs/common';
-import { LoggerFactory } from '../../../cross-cutting/logging/logger.factory';
+import { ILoggerFactory } from '../../../cross-cutting/logging/logger.factory';
 import { ILogger } from '../../../cross-cutting/logging/port/logger.port';
 import { CreateSpecimenRequestDto } from './request.dto';
 import {
@@ -22,7 +23,8 @@ import { ValidationError } from '../../../shared/errors';
 export class CreateSpecimenController {
   private readonly logger: ILogger;
   constructor(
-    private readonly loggerFactory: LoggerFactory,
+    @Inject(ILoggerFactory)
+    private readonly loggerFactory: ILoggerFactory,
     private readonly useCase: CreateSpecimenUseCase,
   ) {
     this.logger = loggerFactory.createLoggerFromClass(CreateSpecimenController);

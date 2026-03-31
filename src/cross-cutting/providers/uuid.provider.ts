@@ -9,6 +9,8 @@ export interface IUuidProvider {
   generate(): string;
 }
 
+export const IUuidProvider = Symbol('IUuidProvider');
+
 @Injectable({ scope: Scope.REQUEST })
 export class UuidProvider implements IUuidProvider {
   generate(): string {
