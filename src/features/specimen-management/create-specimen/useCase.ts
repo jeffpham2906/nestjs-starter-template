@@ -4,11 +4,11 @@ import { ValidationError } from '../../../shared/errors';
 import { Inject, Injectable } from '@nestjs/common';
 import { CreateSpecimenProps } from '../_shared/domain/types/specimen.types';
 import { IUuidProvider } from '../../../cross-cutting/providers/uuid.provider';
-import { Specimen } from '../_shared/domain/entities/specimen';
 import { UserId } from '../../../shared/branded-types';
 import { ILogger } from '../../../cross-cutting/logging/port/logger.port';
 import { ILoggerFactory } from '../../../cross-cutting/logging/logger.factory';
 import { ISpecimenCommandRepositoryPort } from '../_shared/infrastructure/ports/specimen.command-repository.port';
+import { ISpecimenFactory } from '../_shared/domain/entities/specimen.factory';
 
 export interface ICreateSpecimenUseCase {
   perform(
@@ -23,11 +23,15 @@ export class CreateSpecimenUseCase implements ICreateSpecimenUseCase {
     @Inject(IUuidProvider)
     private readonly uuidProvider: IUuidProvider,
     @Inject(ISpecimenCommandRepositoryPort)
-    private readonly repository: ISpecimenCommandRepositoryPort,
+    private readonly commandRepo: ISpecimenCommandRepositoryPort,
     @Inject(ILoggerFactory)
     private readonly loggerFactory: ILoggerFactory,
+    @Inject(ISpecimenFactory)
+    private readonly specimenFactory: ISpecimenFactory,
   ) {
-    this.logger = loggerFactory.createLoggerFromClass(CreateSpecimenUseCase);
+    this.logger = this.loggerFactory.createLoggerFromClass(
+      CreateSpecimenUseCase,
+    );
   }
 
   async perform(
@@ -41,24 +45,17 @@ export class CreateSpecimenUseCase implements ICreateSpecimenUseCase {
       );
     }
 
-    const specimenIdResult = Specimen.createSpecimenId(
-      this.uuidProvider.generate(),
-    );
-    if (specimenIdResult.isErr()) {
-      return Promise.resolve(err(specimenIdResult.error));
-    }
     const createSpecimenProps: CreateSpecimenProps = {
-      id: specimenIdResult.value,
       name: validatedCommand.data.name,
       userId: this.uuidProvider.generate() as UserId,
     };
 
-    const specimen = Specimen.create(createSpecimenProps);
+    const specimen = this.specimenFactory.create(createSpecimenProps);
 
     if (specimen.isErr()) {
       return Promise.resolve(err(specimen.error));
     }
-    await this.repository.save(specimen.value);
+    await this.commandRepo.save(specimen.value);
     return Promise.resolve(ok(specimen.value.id));
   }
 }

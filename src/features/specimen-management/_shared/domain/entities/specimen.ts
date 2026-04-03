@@ -1,78 +1,56 @@
 import {
-  CreateSpecimenProps,
-  CreateSpecimenSchema,
+  SpecimenBaseSchema,
+  SpecimenProps,
   UpdateSpecimenProps,
   UpdateSpecimenSchema,
 } from '../types/specimen.types';
-import { SpecimenId, UserId } from '../../../../../shared/branded-types';
-import { err, ok, Result } from 'neverthrow';
+import { SpecimenId } from '../../../../../shared/branded-types';
+import { err, ok } from 'neverthrow';
 import { ValidationError } from '../../../../../shared/errors';
 import { AuditInfo } from '../../../../../shared/value-objects/audit-info';
 
 export class Specimen {
-  protected constructor(
-    public readonly id: SpecimenId,
-    public readonly name: string,
-    public readonly createdAt?: AuditInfo,
-    public readonly updatedAt?: AuditInfo,
-  ) {}
+  public readonly id: SpecimenId;
+  public readonly name: string;
+  public readonly createdAudit: AuditInfo;
+  public readonly updatedAudit: AuditInfo;
 
-  static create(
-    props?: CreateSpecimenProps,
-  ): Result<Specimen, ValidationError> {
-    const validatedProps = CreateSpecimenSchema.parse(props);
-
-    const userIdResult = this.createUserId(validatedProps.userId);
-    if (userIdResult.isErr()) {
-      return err(userIdResult.error);
+  constructor(props?: SpecimenProps) {
+    if (!props) {
+      return;
     }
 
-    const auditInfo = new AuditInfo(userIdResult.value);
-
-    return ok(
-      new Specimen(
-        validatedProps.id,
-        validatedProps.name,
-        auditInfo,
-        auditInfo,
-      ),
-    );
-  }
-
-  static createUserId(userId: string): Result<UserId, ValidationError> {
-    const result = UserId.safeParse(userId);
-    if (!result.success) {
-      return err(
-        new ValidationError(`Invalid user ID: ${userId}`, result.error),
+    const validatedPropsResult = SpecimenBaseSchema.safeParse(props);
+    if (!validatedPropsResult.success) {
+      throw new ValidationError(
+        'Invalid properties for creating a specimen',
+        validatedPropsResult.error,
       );
     }
-    return ok(result.data);
-  }
-
-  static createSpecimenId(id: string): Result<SpecimenId, ValidationError> {
-    const result = SpecimenId.safeParse(id);
-    if (!result.success) {
-      return err(
-        new ValidationError(`Invalid specimen ID: ${id}`, result.error),
-      );
-    }
-    return ok(result.data);
+    this.id = validatedPropsResult.data.id;
+    this.name = validatedPropsResult.data.name;
+    this.createdAudit = validatedPropsResult.data.createdAudit;
+    this.updatedAudit = validatedPropsResult.data.updatedAudit;
   }
 
   update(props: UpdateSpecimenProps) {
-    const validatedProps = UpdateSpecimenSchema.parse(props);
-
-    const userIdResult = Specimen.createUserId(validatedProps.userId);
-    if (userIdResult.isErr()) {
-      return err(userIdResult.error);
+    const validatedProps = UpdateSpecimenSchema.safeParse(props);
+    if (!validatedProps.success) {
+      return err(
+        new ValidationError(
+          'Invalid properties for updating a specimen',
+          validatedProps.error,
+        ),
+      );
     }
 
-    const auditInfo = new AuditInfo(userIdResult.value);
-    return new Specimen(
-      validatedProps.id,
-      validatedProps.name,
-      this.createdAt,
-      auditInfo,
+    return ok(
+      new Specimen({
+        id: this.id,
+        name: validatedProps.data.name ?? this.name,
+        createdAudit: this.createdAudit,
+        updatedAudit: validatedProps.data.updatedAudit ?? this.updatedAudit,
+      }),
     );
   }
 }

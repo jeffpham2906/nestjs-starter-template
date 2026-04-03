@@ -7,6 +7,7 @@ import {
   NestFastifyApplication,
 } from '@nestjs/platform-fastify';
 import { ILogger } from './cross-cutting/logging/port/logger.port';
+import { cleanupOpenApiDoc } from 'nestjs-zod';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
@@ -46,7 +47,7 @@ async function bootstrap() {
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api-docs', app, document, {
+  SwaggerModule.setup('api-docs', app, cleanupOpenApiDoc(document), {
     jsonDocumentUrl: 'swagger.json',
   });
 

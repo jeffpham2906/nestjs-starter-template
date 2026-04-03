@@ -4,9 +4,9 @@ export class AuditInfo {
   public readonly userId: UserId;
   public readonly timestamp: Date;
 
-  constructor(userId: UserId, timestamp?: Date) {
+  constructor(userId: UserId, timestamp: Date) {
     this.userId = userId;
-    this.timestamp = timestamp ?? new Date();
+    this.timestamp = timestamp;
   }
 
   equals(other: AuditInfo) {
