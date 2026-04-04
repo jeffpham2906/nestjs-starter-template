@@ -1,6 +1,6 @@
 {
-  "name": "nest-ddd-starter",
-  "version": "0.1.1",
+  "name": "create-nest-ddd-starter",
+  "version": "0.1.2",
   "description": "Scaffold a NestJS starter project",
   "license": "MIT",
   "type": "module",
