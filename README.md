@@ -1,10 +1,10 @@
-# create-nest-starter
+# nest-ddd-starter
 
 Scaffold a NestJS starter project from a template using `npm create`.
 
 This repository contains:
 
-- **The CLI (repo root)**: the publishable `create-nest-starter` package
+- **The CLI (repo root)**: the publishable `nest-ddd-starter` package
 - **A preserved starter project**: the NestJS starter lives in `template/` (a maintained copy of the starter; the CLI downloads a GitHub template by default)
 
 ## Requirements
@@ -17,13 +17,13 @@ This repository contains:
 Create a new project:
 
 ```bash
-npm create nest-starter@latest my-app
+npm create nest-ddd-starter@latest my-app
 ```
 
 Or run via npx:
 
 ```bash
-npx create-nest-starter@latest my-app
+npx --package nest-ddd-starter@latest create-nest-ddd-starter my-app
 ```
 
 After generation:
@@ -44,13 +44,13 @@ If the target directory already exists and is not empty, the CLI will exit with 
 ## Usage
 
 ```bash
-create-nest-starter [projectName] [options]
+create-nest-ddd-starter [projectName] [options]
 ```
 
 When using `npm create`, pass CLI flags after `--`:
 
 ```bash
-npm create nest-starter@latest my-app -- --db postgres --docker
+npm create nest-ddd-starter@latest my-app -- --db postgres --docker
 ```
 
 ### Interactive mode
@@ -64,7 +64,7 @@ Any missing values will be prompted for:
 Example:
 
 ```bash
-npm create nest-starter@latest
+npm create nest-ddd-starter@latest
 ```
 
 ### Options
@@ -82,10 +82,10 @@ Notes:
 
 ```bash
 # Postgres + Docker + install deps
-npm create nest-starter@latest my-app -- --db postgres --docker
+npm create nest-ddd-starter@latest my-app -- --db postgres --docker
 
 # MySQL + Docker + skip install
-npm create nest-starter@latest my-app -- --db mysql --docker --skip-install
+npm create nest-ddd-starter@latest my-app -- --db mysql --docker --skip-install
 ```
 
 ## Template source
@@ -103,8 +103,8 @@ export CREATE_NEST_STARTER_TEMPLATE_REPO="<owner>/<repo>/template"
 Example:
 
 ```bash
-export CREATE_NEST_STARTER_TEMPLATE_REPO="jeffpham/create-nest-starter/template"
-npm create nest-starter@latest my-app
+export CREATE_NEST_STARTER_TEMPLATE_REPO="jeffpham/nest-ddd-starter/template"
+npm create nest-ddd-starter@latest my-app
 ```
 
 Important:
@@ -156,10 +156,10 @@ node dist/index.js --help
 To make this available as:
 
 ```bash
-npm create nest-starter@latest my-app
+npm create nest-ddd-starter@latest my-app
 ```
 
-publish this package to npm under the name `create-nest-starter`:
+publish this package to npm under the name `nest-ddd-starter`:
 
 ```bash
 npm login
@@ -170,7 +170,7 @@ npm publish --access public
 Verify:
 
 ```bash
-npm view create-nest-starter version
+npm view nest-ddd-starter version
 ```
 
 ## License

@@ -52,7 +52,7 @@ function parseDbChoice(value: unknown): DbChoice | undefined {
 
 async function main(): Promise<void> {
   const program = new Command()
-    .name("create-nest-starter")
+    .name("create-nest-ddd-starter")
     .description("Scaffold a NestJS starter project")
     .argument("[projectName]", "Project directory name")
     .option("--db <postgres|mysql>", "Database to configure")
@@ -138,7 +138,27 @@ async function main(): Promise<void> {
   }
 }
 
-main().catch((error: unknown) => {
+function cleanupStdin(): void {
+  try {
+    if (process.stdin.isTTY) {
+      process.stdin.setRawMode?.(false);
+    }
+    process.stdin.pause();
+    process.stdin.unref?.();
+  } catch {
+    // ignore best-effort cleanup
+  }
+}
+
+async function run(): Promise<void> {
+  try {
+    await main();
+  } finally {
+    cleanupStdin();
+  }
+}
+
+run().catch((error: unknown) => {
   const message = error instanceof Error ? error.message : String(error);
   console.error(chalk.red(`Error: ${message}`));
   process.exitCode = 1;

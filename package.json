@@ -1,11 +1,12 @@
 {
-  "name": "create-nest-starter",
-  "version": "0.1.0",
+  "name": "nest-ddd-starter",
+  "version": "0.1.1",
   "description": "Scaffold a NestJS starter project",
   "license": "MIT",
   "type": "module",
+  "author": "Jeff Pham",
   "bin": {
-    "create-nest-starter": "dist/index.js"
+    "create-nest-ddd-starter": "dist/index.js"
   },
   "files": [
     "dist"
