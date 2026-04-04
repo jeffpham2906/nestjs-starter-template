@@ -1,37 +1,65 @@
 # create-nest-starter
 
-A publishable `npm create` CLI that scaffolds a NestJS starter project from a template.
+Scaffold a NestJS starter project from a template using `npm create`.
 
-This repo contains:
+This repository contains:
 
-- **CLI package (this repo root)**: `create-nest-starter`
-- **Starter template (preserved)**: the actual NestJS project lives in `template/` and is what gets copied into newly generated projects
+- **The CLI (repo root)**: the publishable `create-nest-starter` package
+- **A preserved starter project**: the NestJS starter lives in `template/` (a maintained copy of the starter; the CLI downloads a GitHub template by default)
 
-## Quick Start
+## Requirements
 
-### Create a new project (recommended)
+- Node.js >= 20
+- npm >= 10
 
-From npm (after you publish):
+## Quick start
+
+Create a new project:
 
 ```bash
 npm create nest-starter@latest my-app
 ```
 
-This will run the package named `create-nest-starter`.
-
-You can also run directly via npx:
+Or run via npx:
 
 ```bash
 npx create-nest-starter@latest my-app
 ```
 
+After generation:
+
+```bash
+cd my-app
+npm run start:dev
+```
+
+## How the CLI works
+
+- Downloads the template (via `degit`, no git history) into the target folder
+- Customizes a few files based on your choices (database, Docker)
+- Runs `npm install` unless you opt out
+
+If the target directory already exists and is not empty, the CLI will exit with an error.
+
+## Usage
+
+```bash
+create-nest-starter [projectName] [options]
+```
+
+When using `npm create`, pass CLI flags after `--`:
+
+```bash
+npm create nest-starter@latest my-app -- --db postgres --docker
+```
+
 ### Interactive mode
 
-If you omit flags, the CLI will prompt for any missing values:
+Any missing values will be prompted for:
 
-- Project name (if missing)
+- Project name (if omitted or invalid)
 - Database (`postgres` or `mysql`)
-- Include Docker files (yes/no)
+- Include Docker files? (default: yes)
 
 Example:
 
@@ -39,42 +67,37 @@ Example:
 npm create nest-starter@latest
 ```
 
-## CLI Usage
+### Options
 
-```bash
-create-nest-starter [projectName] [options]
-```
-
-Options:
-
-- `--db <postgres|mysql>`: Configure the project for Postgres or MySQL
+- `--db <postgres|mysql>`: Database to configure
 - `--docker`: Include Docker files (`Dockerfile`, `compose.yaml`)
 - `--skip-install`: Skip running `npm install`
 
-Examples:
+Notes:
+
+- To run completely non-interactive, provide `projectName`, `--db ...`, and `--docker` (otherwise you’ll be prompted).
+- There is currently no `--no-docker` flag. If you want _no Docker files_, run interactively and answer “no” to the Docker prompt.
+
+## Examples
 
 ```bash
 # Postgres + Docker + install deps
 npm create nest-starter@latest my-app -- --db postgres --docker
 
-# MySQL + no Docker + skip install
-npm create nest-starter@latest my-app -- --db mysql --skip-install
+# MySQL + Docker + skip install
+npm create nest-starter@latest my-app -- --db mysql --docker --skip-install
 ```
 
-Note: when using `npm create`, pass CLI flags after `--`.
+## Template source
 
-## Template Source (degit)
-
-The CLI downloads a template using `degit` (no git history) into the target folder.
-
-By default, the CLI uses this repo’s `template/` subdirectory:
+By default, the CLI downloads this template:
 
 - `jeffpham2906/nestjs-starter-template/template`
 
-You can override the template source via env var (format: `owner/repo/subdir`):
+Override the template repo via env var (format: `owner/repo/subdir`):
 
 ```bash
-export CREATE_NEST_STARTER_TEMPLATE_REPO="<your-github-username>/<your-repo>/template"
+export CREATE_NEST_STARTER_TEMPLATE_REPO="<owner>/<repo>/template"
 ```
 
 Example:
@@ -86,29 +109,23 @@ npm create nest-starter@latest my-app
 
 Important:
 
-- The GitHub repo used as the template source must be public, or users will get download/auth errors.
+- The template repository must be public (otherwise `degit` will fail to download).
 
-### Why `template/` exists
+## What gets customized
 
-Keeping the starter project in `template/` ensures your **starter’s** `package.json` (scripts, Prisma commands, Nest config, etc.) stays intact and is copied into generated projects, while the repo root stays a clean, publishable CLI package.
+After download, the CLI updates the generated project:
 
-## What the CLI customizes
+- Sets `package.json` `name` to your project name
+- Writes `.env` and `.env.example` for the chosen database
+- If Docker is not included, removes `Dockerfile` and `compose.yaml`
 
-After cloning the template, the CLI:
+If you choose MySQL, it also makes a few MySQL-specific adjustments (when the files exist in the template):
 
-- Updates the generated project’s `package.json` name to match your project name
-- Writes `.env` and `.env.example` based on the selected database
-- Removes Docker files if `--docker` is not selected
-- Applies a small MySQL adjustment (switches Prisma provider and updates the Prisma module to avoid Postgres-only adapter wiring)
+- Switches Prisma provider in `prisma/schema.prisma` from Postgres to MySQL
+- Rewrites `src/cross-cutting/db/prisma.module.ts` to a minimal Prisma module
+- Replaces `compose.yaml` with a MySQL service definition
 
-## After generation
-
-```bash
-cd my-app
-npm run start:dev
-```
-
-## Local Development
+## Local development (for contributors)
 
 Install dependencies:
 
@@ -119,7 +136,7 @@ npm install
 Run the CLI in dev mode (TypeScript via `tsx`):
 
 ```bash
-npm run dev -- my-app
+npm run dev -- my-app --db postgres --docker
 ```
 
 Build:
@@ -128,7 +145,7 @@ Build:
 npm run build
 ```
 
-Smoke test the built output:
+Smoke test the built CLI:
 
 ```bash
 node dist/index.js --help
@@ -136,54 +153,24 @@ node dist/index.js --help
 
 ## Publishing
 
-To make this available to everyone as:
+To make this available as:
 
 ```bash
 npm create nest-starter@latest my-app
 ```
 
-you must publish this package to npm under the name `create-nest-starter`.
-
-Steps:
-
-1. Build once locally (optional; publishing also builds via `prepublishOnly`)
-
-```bash
-npm run build
-```
-
-2. Log in to npm
+publish this package to npm under the name `create-nest-starter`:
 
 ```bash
 npm login
-```
-
-3. Pick a version
-
-```bash
 npm version patch
-```
-
-4. Publish (public)
-
-```bash
 npm publish --access public
 ```
 
-5. Verify
+Verify:
 
 ```bash
 npm view create-nest-starter version
-```
-
-Then users can run:
-
-```bash
-npm create nest-starter@latest my-app
-```
-
-```bash
-npm publish
 ```
 
 ## License
