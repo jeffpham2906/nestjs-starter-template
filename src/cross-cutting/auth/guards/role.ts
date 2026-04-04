@@ -1,8 +1,8 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Observable } from 'rxjs';
-import { ROLE_KEY } from 'src/decorators/roles.decorator';
-import { Role } from 'src/enums/role.enum';
+import { ROLE_KEY } from 'src/cross-cutting/auth/decorators/roles.decorator';
+import { Role } from 'src/cross-cutting/auth/enums/role.enum';
 import { AccessControlService } from '../access-control.service';
 import { FastifyRequest } from 'fastify';
 
