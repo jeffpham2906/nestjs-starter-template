@@ -16,8 +16,10 @@ async function bootstrap() {
   );
   const logger = app.get<ILogger>(ILogger);
   const config = new DocumentBuilder()
-    .setTitle('<Project Name> API')
-    .setDescription('API documentation for the <Project Name>.')
+    .setTitle('NestJS Starter API')
+    .setDescription(
+      'API documentation for the NestJS Starter (Fastify + Prisma + Zod).',
+    )
     .setVersion(version)
     .addApiKey(
       {

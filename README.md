@@ -1,327 +1,251 @@
-# NestJS Starter Template
+# NestJS Starter (Fastify + Prisma + Zod)
 
-A feature-rich NestJS starter template with PostgreSQL database and Prisma ORM. This template provides a solid foundation for building scalable backend applications with best practices and development tools already configured.
+NestJS 11 starter template focused on a DDD-ish, feature-first architecture with ports/adapters:
 
-## 📋 Table of Contents
+- **Runtime**: Fastify (`@nestjs/platform-fastify`)
+- **Database**: PostgreSQL via Docker Compose
+- **ORM**: Prisma 7 (client generated into `generated/prisma`)
+- **Validation**: `nestjs-zod` (global Zod validation pipe + OpenAPI cleanup)
+- **Docs**: Swagger UI at `/api-docs`
 
-- [Prerequisites](#prerequisites)
-- [Tech Stack](#tech-stack)
-- [Getting Started](#getting-started)
-- [Database Management](#database-management)
-- [Development](#development)
-- [Testing](#testing)
-- [Project Structure](#project-structure)
-- [Available Scripts](#available-scripts)
-- [Environment Variables](#environment-variables)
-- [Database Schema](#database-schema)
+## Prerequisites
 
-## ✅ Prerequisites
+- Node.js `>= 20`
+- npm `>= 10`
+- Docker + Docker Compose (for local Postgres)
 
-Before you begin, ensure you have the following installed:
+Optional but recommended:
 
-- **Node.js** >= 20.0.0
-- **npm** >= 10.0.0
-- **Docker** and **Docker Compose** (for local database)
+- `nvm` (or similar) to manage Node versions
 
-## 🛠 Tech Stack
+## Quick start (local)
 
-- **Framework**: NestJS 11.x
-- **Language**: TypeScript 5.x
-- **Database**: PostgreSQL (via Docker)
-- **ORM**: Prisma 7.x
-- **Testing**: Jest
-- **Code Quality**: ESLint, Prettier, Husky
-- **Runtime**: SWC for fast compilation
-
-## 🚀 Getting Started
-
-### 1. Clone the Repository
-
-```bash
-git clone <repository-url>
-cd <your-project-name>
-```
-
-### 2. Install Dependencies
+1) Install dependencies
 
 ```bash
 npm install
 ```
 
-### 3. Setup Environment Variables
-
-Copy the example environment file and configure it:
+2) Configure env
 
 ```bash
 cp .env.example .env
 ```
 
-Edit `.env` with your preferred settings (default values work out of the box):
-
-```env
-# Database Configuration
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres
-POSTGRES_DB=your_database_name
-POSTGRES_PORT=5432
-
-# Prisma Database URL
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/your_database_name?schema=public"
-
-# Application Configuration
-NODE_ENV=development
-PORT=3000
-```
-
-### 4. Setup Database & Run Migrations
-
-This single command will:
-- Start PostgreSQL container
-- Wait for database to be ready
-- Run Prisma migrations
-- Generate Prisma client
+3) Start Postgres
 
 ```bash
-npm run db:setup
+docker compose up -d
 ```
 
-### 5. Start Development Server
+4) Run migrations (creates `prisma/migrations` if missing) and generate Prisma client
+
+```bash
+npm run prisma:migrate
+```
+
+5) Start the API
 
 ```bash
 npm run start:dev
 ```
 
-The API will be available at `http://localhost:3000`
+API will be running on `http://localhost:3000` (or your `PORT`).
 
-## 🗄 Database Management
-
-### Docker Commands
+## Day-to-day workflow
 
 ```bash
-# Start PostgreSQL container
-npm run db:up
+# run API (watch mode)
+npm run start:dev
 
-# Stop PostgreSQL container
-npm run db:down
+# lint + format
+npm run lint
+npm run format
 
-# Restart PostgreSQL container
-npm run db:restart
-
-# View PostgreSQL logs
-npm run db:logs
-
-# Wait for database to be ready
-npm run db:wait
+# unit tests + e2e tests
+npm run test
+npm run test:e2e
 ```
 
-### Prisma Commands
+## Contributing
+
+See `CONTRIBUTING.md` for:
+
+- Local setup (including Postgres + Prisma)
+- How this architecture is organized
+- A step-by-step checklist for adding a new feature
+
+## API docs (Swagger)
+
+- Swagger UI: `http://localhost:3000/api-docs`
+- OpenAPI JSON: `http://localhost:3000/api-docs/swagger.json`
+
+Swagger is configured in `src/main.ts`.
+
+## Endpoints
+
+### Health
+
+- `GET /health` — Terminus health check that pings the database connection.
+
+### Specimen Management (example feature)
+
+- `POST /specimen` — creates a specimen (currently uses mocked persistence; repository adapter logs to console).
+
+Example:
 
 ```bash
-# Generate Prisma Client
+curl -X POST "http://localhost:3000/specimen" \
+   -H "content-type: application/json" \
+   -d '{"name":"Example"}'
+```
+
+## Architecture
+
+This repo follows a practical mix of:
+
+- **Feature-first / vertical slice**: most code lives in `src/features/<feature>/...`.
+- **DDD building blocks** (lightweight): entities + value objects + domain errors.
+- **Ports & adapters**: use-cases depend on interfaces (“ports”), and infra implementations (“adapters”) live at the edge.
+
+### Dependency direction
+
+The intended direction is “outside → in”:
+
+```mermaid
+flowchart LR
+   HTTP[Controller] --> UC[Use case]
+   UC --> Domain[Domain entities/value objects]
+   UC --> Ports[Ports (interfaces)]
+   Adapters[Adapters (Prisma/HTTP/etc.)] --> Ports
+```
+
+### Cross-cutting vs features
+
+- `src/cross-cutting/` contains reusable infrastructure concerns:
+   - auth (`@JeffAuth`, guards)
+   - db (Prisma adapter + `PrismaService`)
+   - validation (global Zod pipe + exception filters)
+   - logging (`ILogger`, `LoggerFactory`)
+   - providers (`IUuidProvider`, `IDateTimeProvider`) to keep domain/use-cases testable
+
+- `src/features/` contains business capabilities:
+   - Example: `specimen-management`
+      - `create-specimen/` is a slice (controller + use-case + DTOs)
+      - `_shared/` holds the “feature internals” shared across slices:
+         - `domain/` (entities, errors, types)
+         - `infrastructure/ports/` (interfaces)
+         - `infrastructure/adapters/` (Prisma implementations)
+         - `dto/` + `mappers/` for read-model mapping
+
+### Use-cases + Result types
+
+Use-cases (e.g. `CreateSpecimenUseCase`) return `neverthrow` `Result` to make success/failure explicit and keep error mapping close to the edge (controllers).
+
+### Validation + error responses
+
+- Request DTOs are generated from Zod schemas (`createZodDto`).
+- A global Zod validation pipe is registered in `ValidationModule`.
+- `ZodValidationExceptionFilter` maps validation errors into `{ fieldErrors, formErrors }`.
+- `GlobalExceptionFilter` provides a consistent error envelope for uncaught errors.
+
+## Authentication (scaffold)
+
+This repo includes a composable `@JeffAuth()` decorator that wires guards and Swagger security:
+
+- `@JeffAuth()` / `@JeffAuth(AuthType.JWT)`
+   - Expects `Authorization: Bearer <token>`
+   - Uses `JWTGuard` + `RoleGuard`
+- `@JeffAuth(AuthType.API_KEY)`
+   - Expects `x-api-key`, `x-timestamp`, `x-signature`
+   - Uses `ApiKeyGuard` + `RoleGuard`
+
+The guards are currently placeholders (they log and allow requests) and are meant to be replaced with real validation/authorization logic.
+
+## Prisma notes
+
+- Prisma is configured via `prisma.config.ts` and reads `DATABASE_URL` from `.env`.
+- Prisma Client output is configured to `generated/prisma`.
+   - In application code, import the generated client types from `generated/prisma/client` (not `@prisma/client`).
+
+Common commands:
+
+```bash
 npm run prisma:generate
-
-# Create a new migration
 npm run prisma:migrate
-
-# Deploy migrations to production
 npm run prisma:migrate:deploy
-
-# Reset database (⚠️ WARNING: Deletes all data)
-npm run prisma:reset
-
-# Check migration status
-npm run prisma:migrate:status
-
-# Open Prisma Studio (Database GUI)
-npm run prisma:studio
-
-# Seed the database
-npm run prisma:seed
-
-# Push schema changes without migrations
-npm run prisma:push
-
-# Pull schema from database
-npm run prisma:pull
-
-# Validate schema
-npm run prisma:validate
-
-# Format schema file
+npm run prisma:migrate:reset
 npm run prisma:format
 ```
 
-## 💻 Development
+`npm run prisma:seed` is wired in `package.json`, but requires a `prisma/seed.ts` implementation.
 
-### Running the Application
+## Troubleshooting
+
+- Postgres isn’t running: `docker compose up -d`
+- Prisma can’t connect: check `DATABASE_URL` in `.env` matches the port exposed by `compose.yaml`
+- Prisma types missing: run `npm run prisma:generate`
+- Lint/format failures on commit: Husky runs lint-staged; run `npm run lint` and `npm run format` locally
+
+## Scripts
+
+### App
 
 ```bash
-# Development mode with watch
 npm run start:dev
-
-# Production mode
+npm run start:debug
 npm run build
 npm run start:prod
-
-# Debug mode
-npm run start:debug
 ```
 
-### Code Quality
+### Quality
 
 ```bash
-# Lint code
 npm run lint
-
-# Format code
 npm run format
 ```
 
-## 🧪 Testing
+### Tests
 
 ```bash
-# Run unit tests
 npm run test
-
-# Run tests in watch mode
-npm run test:watch
-
-# Run tests with coverage
-npm run test:cov
-
-# Run e2e tests
 npm run test:e2e
-
-# Debug tests
-npm run test:debug
 ```
 
-## 📁 Project Structure
+## Project structure
 
 ```
-nestjs-starter/
+.
+├── compose.yaml
 ├── prisma/
-│   ├── schema.prisma          # Database schema
-│   └── migrations/            # Database migrations
-├── scripts/
-│   └── wait-for-db.js         # Database readiness checker
+│   └── schema.prisma
+├── generated/
+│   └── prisma/              # generated Prisma Client output
 ├── src/
-│   ├── app.module.ts          # Root module
-│   ├── app.controller.ts      # Root controller
-│   ├── app.service.ts         # Root service
-│   └── main.ts                # Application entry point
-├── test/
-│   ├── app.e2e-spec.ts        # E2E tests
-│   └── jest-e2e.json          # E2E test configuration
-├── compose.yaml               # Docker Compose configuration
-├── .env                       # Environment variables (not in git)
-├── .env.example               # Environment variables template
-└── package.json               # Project dependencies & scripts
+│   ├── app.module.ts        # app wiring (cross-cutting + features)
+│   ├── main.ts              # bootstrap + Swagger
+│   ├── cross-cutting/
+│   │   ├── auth/            # guards + @JeffAuth decorator
+│   │   ├── config/          # env validation (Zod)
+│   │   ├── db/              # Prisma adapter + PrismaService
+│   │   ├── health/          # /health
+│   │   ├── logging/         # ILogger + factory
+│   │   ├── providers/       # uuid/datetime providers
+│   │   └── validation/      # global Zod pipe + exception filters
+│   ├── features/
+│   │   └── specimen-management/
+│   │       ├── _shared/     # domain + ports + adapters
+│   │       └── create-specimen/
+│   └── shared/              # shared types/errors/value-objects
+└── test/
+      └── app.e2e-spec.ts
 ```
 
-## 📜 Available Scripts
+## Environment variables
 
-### Application
+See `.env.example`.
 
-| Script | Description |
-|--------|-------------|
-| `npm run build` | Build the application |
-| `npm run start` | Start the application |
-| `npm run start:dev` | Start in development mode with watch |
-| `npm run start:debug` | Start in debug mode |
-| `npm run start:prod` | Start in production mode |
-
-### Database
-
-| Script | Description |
-|--------|-------------|
-| `npm run db:setup` | Complete database setup (recommended for first-time setup) |
-| `npm run db:up` | Start PostgreSQL container |
-| `npm run db:down` | Stop PostgreSQL container |
-| `npm run db:restart` | Restart PostgreSQL container |
-| `npm run db:logs` | View PostgreSQL logs |
-| `npm run db:reset` | Reset database and migrations |
-
-### Prisma
-
-| Script | Description |
-|--------|-------------|
-| `npm run prisma:generate` | Generate Prisma Client |
-| `npm run prisma:migrate` | Create and apply migration |
-| `npm run prisma:migrate:deploy` | Deploy migrations (production) |
-| `npm run prisma:migrate:status` | Check migration status |
-| `npm run prisma:studio` | Open Prisma Studio GUI |
-| `npm run prisma:seed` | Seed database with sample data |
-| `npm run prisma:format` | Format Prisma schema |
-
-### Testing & Quality
-
-| Script | Description |
-|--------|-------------|
-| `npm run test` | Run unit tests |
-| `npm run test:watch` | Run tests in watch mode |
-| `npm run test:cov` | Run tests with coverage |
-| `npm run test:e2e` | Run end-to-end tests |
-| `npm run lint` | Lint and fix code |
-| `npm run format` | Format code with Prettier |
-
-## 🔐 Environment Variables
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `POSTGRES_USER` | PostgreSQL username | `postgres` |
-| `POSTGRES_PASSWORD` | PostgreSQL password | `postgres` |
-| `POSTGRES_DB` | PostgreSQL database name | `your_database_name` |
-| `POSTGRES_PORT` | PostgreSQL port | `5432` |
-| `DATABASE_URL` | Full database connection string | Constructed from above |
-| `NODE_ENV` | Application environment | `development` |
-| `PORT` | Application port | `3000` |
-
-## 🗃 Database Schema
-
-This template uses Prisma ORM with PostgreSQL. The database schema is defined in `prisma/schema.prisma` and can be customized to fit your application's needs.
-
-### Getting Started with Schema
-
-1. **Define your models** in `prisma/schema.prisma`
-2. **Generate Prisma Client** after schema changes:
-   ```bash
-   npm run prisma:generate
-   ```
-3. **Create and run migrations**:
-   ```bash
-   npm run prisma:migrate
-   ```
-
-### Example Model
-
-To add a new model, update the schema file:
-
-```prisma
-model User {
-  id        BigInt   @id @default(autoincrement())
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-```
-
-### Prisma Studio
-
-Use Prisma Studio to interact with your database visually:
-
-```bash
-npm run prisma:studio
-```
-
-## 📚 Additional Resources
-
-- [NestJS Documentation](https://docs.nestjs.com)
-- [Prisma Documentation](https://www.prisma.io/docs)
-- [PostgreSQL Documentation](https://www.postgresql.org/docs)
-- [Docker Documentation](https://docs.docker.com)
-
-## 📄 License
-
-This project is [MIT licensed](LICENSE).
+- `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, `POSTGRES_PORT`
+- `DATABASE_URL`
+- `PORT`
+- `NODE_ENV` (validated values: `local | development | production | test`)
