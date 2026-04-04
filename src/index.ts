@@ -1,17 +1,17 @@
 #!/usr/bin/env node
 
-import { Command } from 'commander';
-import chalk from 'chalk';
-import ora from 'ora';
-import path from 'node:path';
-import fs from 'node:fs/promises';
+import { Command } from "commander";
+import chalk from "chalk";
+import ora from "ora";
+import path from "node:path";
+import fs from "node:fs/promises";
 
-import { promptForMissingOptions } from './prompts.js';
-import { downloadTemplate } from './download.js';
-import { customizeTemplate } from './customize.js';
-import { installDependencies } from './install.js';
+import { promptForMissingOptions } from "./prompts.js";
+import { downloadTemplate } from "./download.js";
+import { customizeTemplate } from "./customize.js";
+import { installDependencies } from "./install.js";
 
-type DbChoice = 'postgres' | 'mysql';
+type DbChoice = "postgres" | "mysql";
 
 type CliOptions = {
   projectName: string;
@@ -22,7 +22,7 @@ type CliOptions = {
 
 const DEFAULT_TEMPLATE_REPO =
   process.env.CREATE_NEST_STARTER_TEMPLATE_REPO ??
-  'your-github-username/create-nest-starter/template';
+  "https://github.com/jeffpham2906/nestjs-starter-template.git";
 
 async function isNonEmptyDirectory(dirPath: string): Promise<boolean> {
   try {
@@ -45,19 +45,19 @@ async function ensureTargetDirectoryIsUsable(targetDir: string): Promise<void> {
 }
 
 function parseDbChoice(value: unknown): DbChoice | undefined {
-  if (typeof value !== 'string') return undefined;
-  if (value === 'postgres' || value === 'mysql') return value;
+  if (typeof value !== "string") return undefined;
+  if (value === "postgres" || value === "mysql") return value;
   return undefined;
 }
 
 async function main(): Promise<void> {
   const program = new Command()
-    .name('create-nest-starter')
-    .description('Scaffold a NestJS starter project')
-    .argument('[projectName]', 'Project directory name')
-    .option('--db <postgres|mysql>', 'Database to configure')
-    .option('--docker', 'Include Docker files')
-    .option('--skip-install', 'Skip installing dependencies')
+    .name("create-nest-starter")
+    .description("Scaffold a NestJS starter project")
+    .argument("[projectName]", "Project directory name")
+    .option("--db <postgres|mysql>", "Database to configure")
+    .option("--docker", "Include Docker files")
+    .option("--skip-install", "Skip installing dependencies")
     .parse(process.argv);
 
   const [projectNameArg] = program.args as Array<string | undefined>;
@@ -67,7 +67,7 @@ async function main(): Promise<void> {
     skipInstall?: boolean;
   }>();
 
-  const dockerFlagProvided = process.argv.includes('--docker');
+  const dockerFlagProvided = process.argv.includes("--docker");
 
   const partial: Partial<CliOptions> = {
     projectName: projectNameArg,
@@ -81,19 +81,19 @@ async function main(): Promise<void> {
   const targetDir = path.resolve(process.cwd(), options.projectName);
   await ensureTargetDirectoryIsUsable(targetDir);
 
-  const downloadSpinner = ora('Downloading template...').start();
+  const downloadSpinner = ora("Downloading template...").start();
   try {
     await downloadTemplate({
       templateRepo: DEFAULT_TEMPLATE_REPO,
       targetDir,
     });
-    downloadSpinner.succeed('Template downloaded');
+    downloadSpinner.succeed("Template downloaded");
   } catch (error) {
-    downloadSpinner.fail('Failed to download template');
+    downloadSpinner.fail("Failed to download template");
     throw error;
   }
 
-  const customizeSpinner = ora('Customizing project...').start();
+  const customizeSpinner = ora("Customizing project...").start();
   try {
     await customizeTemplate({
       targetDir,
@@ -101,35 +101,37 @@ async function main(): Promise<void> {
       db: options.db,
       docker: options.docker,
     });
-    customizeSpinner.succeed('Project customized');
+    customizeSpinner.succeed("Project customized");
   } catch (error) {
-    customizeSpinner.fail('Failed to customize project');
+    customizeSpinner.fail("Failed to customize project");
     throw error;
   }
 
   if (!options.skipInstall) {
-    const installSpinner = ora('Installing dependencies (npm install)...').start();
+    const installSpinner = ora(
+      "Installing dependencies (npm install)...",
+    ).start();
     try {
       await installDependencies({ targetDir });
-      installSpinner.succeed('Dependencies installed');
+      installSpinner.succeed("Dependencies installed");
     } catch (error) {
-      installSpinner.fail('Failed to install dependencies');
+      installSpinner.fail("Failed to install dependencies");
       throw error;
     }
   }
 
   console.log();
-  console.log(chalk.green('Success!'));
+  console.log(chalk.green("Success!"));
   console.log();
-  console.log('Next steps:');
+  console.log("Next steps:");
   console.log(chalk.cyan(`  cd ${options.projectName}`));
-  console.log(chalk.cyan('  npm run start:dev'));
+  console.log(chalk.cyan("  npm run start:dev"));
   console.log();
 
-  if (DEFAULT_TEMPLATE_REPO.includes('your-github-username')) {
+  if (DEFAULT_TEMPLATE_REPO.includes("your-github-username")) {
     console.log(
       chalk.yellow(
-        'Note: Set CREATE_NEST_STARTER_TEMPLATE_REPO to your real template repo (e.g. username/repo/template).',
+        "Note: Set CREATE_NEST_STARTER_TEMPLATE_REPO to your real template repo (e.g. username/repo/template).",
       ),
     );
   }
