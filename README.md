@@ -67,11 +67,11 @@ Note: when using `npm create`, pass CLI flags after `--`.
 
 The CLI downloads a template using `degit` (no git history) into the target folder.
 
-By default, the CLI expects your template to be available at:
+By default, the CLI uses this repo’s `template/` subdirectory:
 
-- `your-github-username/create-nest-starter/template`
+- `jeffpham2906/nestjs-starter-template/template`
 
-Before publishing, set the real template repo path via env var:
+You can override the template source via env var (format: `owner/repo/subdir`):
 
 ```bash
 export CREATE_NEST_STARTER_TEMPLATE_REPO="<your-github-username>/<your-repo>/template"
@@ -83,6 +83,10 @@ Example:
 export CREATE_NEST_STARTER_TEMPLATE_REPO="jeffpham/create-nest-starter/template"
 npm create nest-starter@latest my-app
 ```
+
+Important:
+
+- The GitHub repo used as the template source must be public, or users will get download/auth errors.
 
 ### Why `template/` exists
 
@@ -132,9 +136,51 @@ node dist/index.js --help
 
 ## Publishing
 
-1. Update the version in `package.json`
-2. Ensure your template repo path is correct (see `CREATE_NEST_STARTER_TEMPLATE_REPO`)
-3. Publish:
+To make this available to everyone as:
+
+```bash
+npm create nest-starter@latest my-app
+```
+
+you must publish this package to npm under the name `create-nest-starter`.
+
+Steps:
+
+1. Build once locally (optional; publishing also builds via `prepublishOnly`)
+
+```bash
+npm run build
+```
+
+2. Log in to npm
+
+```bash
+npm login
+```
+
+3. Pick a version
+
+```bash
+npm version patch
+```
+
+4. Publish (public)
+
+```bash
+npm publish --access public
+```
+
+5. Verify
+
+```bash
+npm view create-nest-starter version
+```
+
+Then users can run:
+
+```bash
+npm create nest-starter@latest my-app
+```
 
 ```bash
 npm publish

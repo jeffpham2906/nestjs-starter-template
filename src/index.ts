@@ -22,7 +22,7 @@ type CliOptions = {
 
 const DEFAULT_TEMPLATE_REPO =
   process.env.CREATE_NEST_STARTER_TEMPLATE_REPO ??
-  "https://github.com/jeffpham2906/nestjs-starter-template.git";
+  "jeffpham2906/nestjs-starter-template/template";
 
 async function isNonEmptyDirectory(dirPath: string): Promise<boolean> {
   try {
@@ -128,12 +128,13 @@ async function main(): Promise<void> {
   console.log(chalk.cyan("  npm run start:dev"));
   console.log();
 
-  if (DEFAULT_TEMPLATE_REPO.includes("your-github-username")) {
+  if (process.env.CREATE_NEST_STARTER_TEMPLATE_REPO === undefined) {
     console.log(
-      chalk.yellow(
-        "Note: Set CREATE_NEST_STARTER_TEMPLATE_REPO to your real template repo (e.g. username/repo/template).",
+      chalk.dim(
+        `Template source: ${DEFAULT_TEMPLATE_REPO} (override via CREATE_NEST_STARTER_TEMPLATE_REPO)`,
       ),
     );
+    console.log();
   }
 }
 
