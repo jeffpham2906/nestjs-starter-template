@@ -16,7 +16,7 @@ import {
 } from './response.dto';
 import { createSuccessResponse } from '../../../shared/types';
 import { ZodResponse } from 'nestjs-zod';
-import { CreateSpecimenUseCase } from './useCase';
+import { ICreateSpecimenUseCase } from './useCase';
 import { ValidationError } from '../../../shared/errors';
 
 @Controller('specimen')
@@ -25,7 +25,8 @@ export class CreateSpecimenController {
   constructor(
     @Inject(ILoggerFactory)
     private readonly loggerFactory: ILoggerFactory,
-    private readonly useCase: CreateSpecimenUseCase,
+    @Inject(ICreateSpecimenUseCase)
+    private readonly useCase: ICreateSpecimenUseCase,
   ) {
     this.logger = loggerFactory.createLoggerFromClass(CreateSpecimenController);
   }

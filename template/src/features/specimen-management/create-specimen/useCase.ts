@@ -16,6 +16,8 @@ export interface ICreateSpecimenUseCase {
   ): Promise<Result<string, Error | ValidationError>>;
 }
 
+export const ICreateSpecimenUseCase = Symbol('ICreateSpecimenUseCase');
+
 @Injectable()
 export class CreateSpecimenUseCase implements ICreateSpecimenUseCase {
   private readonly logger: ILogger;
