@@ -5,11 +5,94 @@ This document provides guidelines for AI agents working on this project.
 ## Project Overview
 
 This is a NestJS-based backend application with:
+
 - **Framework**: NestJS 11.x with TypeScript 5.x
 - **Database**: PostgreSQL with Prisma ORM 7.x
 - **Testing**: Jest for unit and E2E tests
 - **Code Quality**: ESLint, Prettier, Husky pre-commit hooks
 - **Runtime**: SWC for fast compilation
+
+## Architecture Guardrails (Read This First)
+
+This project is intentionally **not** a “classic layered architecture” (Controller → Service → Repository across global folders).
+
+When an AI agent plans or implements changes, follow these guardrails:
+
+### Non-negotiables
+
+- **Validation is Zod-first** via `nestjs-zod`.
+  - Use `createZodDto(...)` for request/response DTOs.
+  - Use Zod schemas (e.g., `SomeSchema.safeParse(...)`) for use case/command validation.
+  - The app uses a global `ZodValidationPipe` and Zod exception filters.
+- **Do NOT introduce `class-validator`, `class-transformer`, or Nest `ValidationPipe` patterns**.
+  - Do not add decorator-based DTOs (`@IsString()`, `@IsOptional()`, etc.).
+  - Do not propose installing class-validator/class-transformer “because Nest usually uses it”.
+- **Feature-first (vertical slice) structure** under `src/features/...`.
+  - Put a feature’s controller, use case, command schema, and DTOs together.
+  - Put reusable domain/infrastructure parts for the feature under `_shared/`.
+- **Ports/adapters + use cases are preferred**.
+  - Use DI tokens (Symbols) for ports/use cases, and bind them in the feature modules.
+- **Errors/results**: prefer explicit error types and `neverthrow` (`Result`, `ok`, `err`) inside domain/use cases.
+  - Controllers translate domain errors into appropriate Nest exceptions.
+
+### Defaults to assume
+
+- HTTP adapter is **Fastify**.
+- Logging uses `ILogger` + `ILoggerFactory` (don’t use `console.log`).
+- Prisma access goes through the global `PrismaService` from `src/cross-cutting/db/prismaClient.ts`.
+
+### Validation (Zod-First)
+
+#### Request DTOs
+
+Use `nestjs-zod` DTOs.
+
+```typescript
+import { z } from 'zod';
+import { createZodDto } from 'nestjs-zod';
+
+const createThingRequestSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+});
+
+export class CreateThingRequestDto extends createZodDto(
+  createThingRequestSchema,
+) {}
+```
+
+#### Use case / command validation
+
+Even if the controller receives a validated DTO, validate the command at the use case boundary when it matters.
+
+```typescript
+const validated = CreateThingCommandSchema.safeParse(command);
+if (!validated.success) {
+  return err(new ValidationError('Invalid command', validated.error));
+}
+```
+
+#### Avoid these patterns
+
+- Do not add `@IsString()`, `@IsUUID()`, `@ValidateNested()`, etc.
+- Do not add `class-validator` dependencies.
+- Do not add `ValidationPipe` configuration.
+
+### Feature Implementation Pattern
+
+When implementing a new endpoint inside a feature, prefer a structure similar to:
+
+- `src/features/<feature>/<use-case>/controller.ts` (HTTP mapping + exception translation)
+- `src/features/<feature>/<use-case>/useCase.ts` (business flow, returns `Result`)
+- `src/features/<feature>/<use-case>/command.ts` (Zod schema + types)
+- `src/features/<feature>/<use-case>/request.dto.ts` and `response.dto.ts` (Zod DTOs)
+- `src/features/<feature>/_shared/` (ports, adapters, mappers, domain entities/errors)
+
+Conventions to follow in controllers:
+
+- Prefer `@ZodResponse(...)` for Swagger response typing.
+- Prefer returning standardized wrappers from `src/shared/types` (e.g. `createSuccessResponse(...)`).
+
+If you’re unsure, search existing features (e.g. `specimen-management`) and copy the project’s patterns.
 
 ## Runtime Requirements
 
@@ -40,6 +123,7 @@ npm --version   # Should be >= 10.0.0
 ### Available Scripts
 
 #### Application
+
 - `npm run build` - Build the application for production
 - `npm run start` - Start the application
 - `npm run start:dev` - Start in development mode with watch
@@ -47,6 +131,7 @@ npm --version   # Should be >= 10.0.0
 - `npm run start:prod` - Start production build
 
 #### Database (Prisma)
+
 - `npm run prisma:generate` - Generate Prisma Client (run after schema changes)
 - `npm run prisma:migrate` - Create and apply migration
 - `npm run prisma:migrate:deploy` - Deploy migrations (production)
@@ -55,6 +140,7 @@ npm --version   # Should be >= 10.0.0
 - `npm run prisma:format` - Format Prisma schema file
 
 #### Testing
+
 - `npm run test` - Run unit tests
 - `npm run test:watch` - Run tests in watch mode
 - `npm run test:cov` - Run tests with coverage report
@@ -62,10 +148,28 @@ npm --version   # Should be >= 10.0.0
 - `npm run test:debug` - Run tests in debug mode
 
 #### Code Quality
+
 - `npm run lint` - Lint and fix TypeScript code
 - `npm run format` - Format code with Prettier
 
 ## Code Style and Conventions
+
+### Dependency Injection Import Style
+
+When a DI token and its interface share the same exported name (for example `IDateTimeProvider`), import it once and reuse that identifier for both `@Inject(...)` and the property type.
+
+Preferred pattern:
+
+```typescript
+import { IDateTimeProvider } from '@cross-cutting/providers/datetime.provider';
+
+constructor(
+  @Inject(IDateTimeProvider)
+  private readonly dateTimeProvider: IDateTimeProvider,
+) {}
+```
+
+Avoid aliasing the same symbol into a second type-only name (for example `type IDateTimeProvider as IDateTimeProviderType`) unless there is a real naming collision.
 
 ### TypeScript Configuration
 
@@ -87,6 +191,7 @@ Key rules from `eslint.config.mjs`:
 ### Prettier Configuration
 
 From `.prettierrc`:
+
 ```json
 {
   "singleQuote": true,
@@ -99,6 +204,7 @@ From `.prettierrc`:
 ### Pre-commit Hooks
 
 Husky runs `lint-staged` on every commit. For each `.ts` file, it runs:
+
 1. `npm run lint` - ESLint
 2. `npm run format` - Prettier
 3. `npm run prisma:format` - Prisma schema formatter
@@ -113,11 +219,14 @@ src/
 │   ├── auth/              # Authentication guards and strategies
 │   ├── db/                # Prisma service and database module
 │   ├── health/            # Health check endpoints (Terminus)
+│   ├── providers/          # Utilities (uuid, datetime, encryption, ...)
 │   └── logging/           # Structured logging utilities
-├── middleware/            # NestJS middleware (e.g., context)
+├── features/               # Feature modules (vertical slices)
+│   └── <feature>/
+│       ├── _shared/        # Domain + infrastructure shared inside the feature
+│       └── <use-case>/     # e.g. create-thing/, update-thing/
+├── shared/                 # Cross-feature types, errors, response helpers
 ├── app.module.ts          # Root application module
-├── app.controller.ts      # Root controller
-├── app.service.ts         # Root service
 └── main.ts                # Application entry point
 
 test/
@@ -164,6 +273,7 @@ describe('AppController', () => {
 ```
 
 **Best Practices**:
+
 1. Use `beforeAll` for module setup (runs once before all tests)
 2. Use `describe` blocks to group related tests
 3. Use clear, descriptive test names (`should return expected value`)
@@ -208,6 +318,7 @@ describe('AppController (e2e)', () => {
 ```
 
 **Best Practices**:
+
 1. Always clean up with `afterAll` (close the app)
 2. Use `supertest` for HTTP assertions
 3. Test real HTTP requests, not just functions
@@ -216,11 +327,13 @@ describe('AppController (e2e)', () => {
 ### Running Tests
 
 **Before committing**:
+
 1. Run unit tests: `npm run test`
 2. Run E2E tests: `npm run test:e2e`
 3. Check coverage: `npm run test:cov`
 
 **For development**:
+
 - Use `npm run test:watch` for automatic test re-running
 
 ## Working with Prisma
@@ -230,14 +343,17 @@ describe('AppController (e2e)', () => {
 1. **Edit the schema**: Modify `prisma/schema.prisma`
 
 2. **Generate Prisma Client**:
+
    ```bash
    npm run prisma:generate
    ```
 
 3. **Create a migration**:
+
    ```bash
    npm run prisma:migrate
    ```
+
    This will create a new migration in `prisma/migrations/`
 
 4. **Format the schema**:
@@ -247,10 +363,11 @@ describe('AppController (e2e)', () => {
 
 ### Using Prisma Client
 
-The Prisma service is available in `src/cross-cutting/db/`. Import it:
+The Prisma service is provided globally by `PrismaModule`.
+Import `PrismaService` from `src/cross-cutting/db/prismaClient.ts`:
 
 ```typescript
-import { PrismaService } from './cross-cutting/db/prisma.service';
+import { PrismaService } from './cross-cutting/db/prismaClient';
 
 // In your service
 constructor(private prisma: PrismaService) {}
@@ -270,20 +387,25 @@ npm run prisma:migrate:reset
 
 ## Creating New Modules
 
-Use the NestJS CLI to generate new modules:
+Prefer creating modules inside `src/features/<feature>/...` so code stays feature-scoped.
+You may use the NestJS CLI, but generate into the `features/` folder (and then adapt files to our patterns):
 
 ```bash
-# Generate a module
-nest g module modules/your-module
+# Example: create a new feature module
+nest g module features/your-feature
 
-# Generate a controller
-nest g controller modules/your-module
-
-# Generate a service
-nest g service modules/your-module
+# Example: create a new endpoint slice inside a feature
+nest g module features/your-feature/create-thing
+nest g controller features/your-feature/create-thing
 ```
 
 This automatically updates imports and module declarations.
+
+After generation, refactor to:
+
+- Use `createZodDto` DTOs (not class-validator DTOs)
+- Use a `useCase.ts` with a Symbol token (not a generic “service”)
+- Put reusable ports/adapters in `features/your-feature/_shared/`
 
 ## Cross-Cutting Concerns
 
@@ -291,12 +413,12 @@ This automatically updates imports and module declarations.
 
 The project includes a structured logging system in `src/cross-cutting/logging/` using the `LoggerFactory` pattern.
 
-**Import the LoggerFactory:**
+**Import the logger token + types:**
 
 ```typescript
-import { Injectable } from '@nestjs/common';
-import { LoggerFactory } from '../cross-cutting/logging/logging.factory';
-import { ILogger } from '../cross-cutting/logging/interface/logging';
+import { Inject, Injectable } from '@nestjs/common';
+import { ILoggerFactory } from '../cross-cutting/logging/logger.factory';
+import { ILogger } from '../cross-cutting/logging/port/logger.port';
 ```
 
 **Create a logger per service:**
@@ -306,9 +428,11 @@ import { ILogger } from '../cross-cutting/logging/interface/logging';
 export class YourService {
   private readonly logger: ILogger;
 
-  constructor(loggerFactory: LoggerFactory) {
-    // Create logging with class name as context
-    this.logger = loggerFactory.createLoggerFromClass(YourService);
+  constructor(
+    @Inject(ILoggerFactory)
+    private readonly loggerFactory: ILoggerFactory,
+  ) {
+    this.logger = this.loggerFactory.createLoggerFromClass(YourService);
   }
 
   yourMethod() {
@@ -327,13 +451,17 @@ export class YourService {
 export class YourService {
   private readonly logger: ILogger;
 
-  constructor(loggerFactory: LoggerFactory) {
-    this.logger = loggerFactory.createLogger('YourService');
+  constructor(
+    @Inject(ILoggerFactory)
+    private readonly loggerFactory: ILoggerFactory,
+  ) {
+    this.logger = this.loggerFactory.createLogger('YourService');
   }
 }
 ```
 
 **Available log methods:**
+
 - `logger.log(message, ...optionalParams)` - General logging
 - `logger.debug(message, ...optionalParams)` - Debug level
 - `logger.warn(message, ...optionalParams)` - Warning level
@@ -363,6 +491,7 @@ export class YourController {
 **Available Auth Types:**
 
 1. **JWT Authentication** (default):
+
 ```typescript
 import { JeffAuth, AuthType } from '../cross-cutting/auth/jeffAuth';
 
@@ -372,11 +501,12 @@ import { JeffAuth, AuthType } from '../cross-cutting/auth/jeffAuth';
 export class UsersController {}
 ```
 
-   - Uses Bearer token authentication
-   - Requires `Authorization: Bearer <token>` header
-   - Automatically adds Swagger API documentation
+- Uses Bearer token authentication
+- Requires `Authorization: Bearer <token>` header
+- Automatically adds Swagger API documentation
 
 2. **API Key Authentication**:
+
 ```typescript
 import { JeffAuth, AuthType } from '../cross-cutting/auth/jeffAuth';
 
@@ -385,12 +515,12 @@ import { JeffAuth, AuthType } from '../cross-cutting/auth/jeffAuth';
 export class ApiController {}
 ```
 
-   - Uses API key, timestamp, and signature headers
-   - Requires three headers:
-     - `x-api-key`
-     - `x-timestamp`
-     - `x-signature`
-   - Suitable for service-to-service authentication
+- Uses API key, timestamp, and signature headers
+- Requires three headers:
+  - `x-api-key`
+  - `x-timestamp`
+  - `x-signature`
+- Suitable for service-to-service authentication
 
 **Use on specific endpoints:**
 
@@ -419,6 +549,7 @@ export class ResourcesController {
 ```
 
 **The decorator automatically:**
+
 - Applies the appropriate guard (`JWTGuard` or `ApiKeyGuard`)
 - Adds Swagger documentation (`ApiBearerAuth` or `ApiSecurity`)
 - Adds standard error responses (401 Unauthorized, 403 Forbidden)
@@ -448,11 +579,13 @@ getDatabaseUrl() {
 ### Debugging
 
 1. **Start in debug mode**:
+
    ```bash
    npm run start:debug
    ```
 
 2. **Debug tests**:
+
    ```bash
    npm run test:debug
    ```
@@ -462,6 +595,7 @@ getDatabaseUrl() {
 ### Building for Production
 
 1. **Build the application**:
+
    ```bash
    npm run build
    ```
@@ -478,17 +612,21 @@ The build output is in the `dist/` directory.
 ### Common Issues
 
 **"Cannot find module" errors**:
+
 - Run `npm install` to ensure dependencies are installed
 - Run `npm run prisma:generate` if Prisma types are missing
 
 **Prisma client outdated**:
+
 - Run `npm run prisma:generate` after schema changes
 
 **Tests failing locally**:
+
 - Ensure database is running: `docker compose up -d`
 - Run migrations: `npm run prisma:migrate`
 
 **Pre-commit hooks failing**:
+
 - Run `npm run lint` and `npm run format` manually to see errors
 - Fix issues, then commit again
 
