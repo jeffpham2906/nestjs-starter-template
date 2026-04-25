@@ -1,10 +1,16 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
+import { ClaimsHelper, IClaimsHelper } from './claims-helper';
 import { AccessControlService } from './access-control.service';
-import { JWTGuard } from './guards/jwt';
-import { ApiKeyGuard } from './guards/apiKey';
 
+@Global()
 @Module({
-  providers: [AccessControlService, JWTGuard, ApiKeyGuard],
-  exports: [AccessControlService, JWTGuard, ApiKeyGuard],
+  providers: [
+    AccessControlService,
+    {
+      provide: IClaimsHelper,
+      useClass: ClaimsHelper,
+    },
+  ],
+  exports: [IClaimsHelper, AccessControlService],
 })
 export class AuthModule {}

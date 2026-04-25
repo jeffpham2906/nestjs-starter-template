@@ -25,7 +25,7 @@ export class EncryptionProvider implements IEncryptionProvider {
   ) {
     this.logger = this.loggerFactory.createLoggerFromClass(EncryptionProvider);
 
-    const rawKey = this.configService.get<string>('ENCRYPTION_KEY');
+    const rawKey = this.configService.getOrThrow<string>('ENCRYPTION_KEY');
     this.encryptionKey = crypto
       .createHash('sha256')
       .update(rawKey)
