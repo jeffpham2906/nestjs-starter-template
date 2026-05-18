@@ -6,8 +6,8 @@ import {
   SpecimenQueryMapper,
   SpecimenReadData,
 } from '../mappers/specimen.query-mapper';
-import { ILoggerFactory } from '../../../../../cross-cutting/logging/logger.factory';
-import { ILogger } from '../../../../../cross-cutting/logging/port/logger.port';
+import { ILogger } from '@cross-cutting/logging/port/logger.port';
+import { ILoggerFactory } from '@cross-cutting/logging/logger.factory';
 
 @Injectable()
 export class SpecimenQueryRepositoryPrisma

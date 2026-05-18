@@ -1,10 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ISpecimenCommandRepositoryPort } from '../ports/specimen.command-repository.port';
-import { PrismaService } from '../../../../../cross-cutting/db/prismaClient';
-import { Specimen } from '../../domain/entities/specimen';
 import { ok, Result } from 'neverthrow';
-import { ILogger } from '../../../../../cross-cutting/logging/port/logger.port';
-import { ILoggerFactory } from '../../../../../cross-cutting/logging/logger.factory';
+import { ILoggerFactory } from '@cross-cutting/logging/logger.factory';
+import { ILogger } from '@cross-cutting/logging/port/logger.port';
+import { Specimen } from '../../domain/entities/specimen';
 
 @Injectable()
 export class SpecimenCommandRepositoryPrisma
@@ -12,7 +11,6 @@ export class SpecimenCommandRepositoryPrisma
 {
   private readonly logger: ILogger;
   constructor(
-    private readonly prisma: PrismaService,
     @Inject(ILoggerFactory)
     private readonly loggerFactory: ILoggerFactory,
   ) {

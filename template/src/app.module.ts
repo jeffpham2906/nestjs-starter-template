@@ -1,6 +1,5 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { PrismaModule } from './cross-cutting/db/prisma.module';
 import helmet from 'helmet';
 import { AuthModule } from './cross-cutting/auth/auth.module';
 import { HealthModule } from './cross-cutting/health/health.module';
@@ -21,7 +20,6 @@ import { UtilitiesModule } from './cross-cutting/providers/utilities.module';
       validate: validateConfig,
     }),
     LoggingModule,
-    PrismaModule,
     AuthModule,
     HealthModule,
     SpecimenManagementModule,

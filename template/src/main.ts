@@ -1,13 +1,11 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { version } from '../package.json';
 import {
   FastifyAdapter,
   NestFastifyApplication,
 } from '@nestjs/platform-fastify';
 import { ILogger } from './cross-cutting/logging/port/logger.port';
-import { cleanupOpenApiDoc } from 'nestjs-zod';
+import { setupSwagger } from '@shared/utils';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
@@ -15,43 +13,7 @@ async function bootstrap() {
     new FastifyAdapter(),
   );
   const logger = app.get<ILogger>(ILogger);
-  const config = new DocumentBuilder()
-    .setTitle('NestJS Starter API')
-    .setDescription(
-      'API documentation for the NestJS Starter (Fastify + Prisma + Zod).',
-    )
-    .setVersion(version)
-    .addApiKey(
-      {
-        type: 'apiKey',
-        name: 'x-api-key',
-        in: 'header',
-      },
-      'api-key',
-    )
-    .addApiKey(
-      {
-        type: 'apiKey',
-        name: 'x-timestamp',
-        in: 'header',
-      },
-      'timestamp',
-    )
-    .addApiKey(
-      {
-        type: 'apiKey',
-        name: 'x-signature',
-        in: 'header',
-      },
-      'signature',
-    )
-    .addBearerAuth()
-    .build();
-
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api-docs', app, cleanupOpenApiDoc(document), {
-    jsonDocumentUrl: 'swagger.json',
-  });
+  setupSwagger(app);
 
   const port = process.env.PORT || 3000;
   await app.listen(port).then(() => {
